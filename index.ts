@@ -8,15 +8,25 @@ function castArray<A = unknown>(possibleArray: A | A[]): A[] {
 	return [possibleArray];
 }
 
+interface Target {
+	tabId: number;
+	frameId: number;
+}
+
 export async function injectContentScript(
-	tabId: number,
+	target: number | Target,
 	scripts: ContentScripts | ContentScripts[0],
 ): Promise<void> {
+	const {frameId, tabId} = typeof target === 'object' ? target : {
+		tabId: target,
+		frameId: 0,
+	};
 	const injections: Array<Promise<unknown>> = [];
 	for (const script of castArray(scripts)) {
 		for (const file of script.css ?? []) {
 			injections.push(chrome.tabs.insertCSS(tabId, {
 				file,
+				frameId,
 				runAt: script.run_at,
 				allFrames: script.all_frames,
 				matchAboutBlank: script.match_about_blank,
@@ -26,6 +36,7 @@ export async function injectContentScript(
 		for (const file of script.js ?? []) {
 			injections.push(chrome.tabs.executeScript(tabId, {
 				file,
+				frameId,
 				runAt: script.run_at,
 				allFrames: script.all_frames,
 				matchAboutBlank: script.match_about_blank,

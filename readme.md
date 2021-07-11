@@ -41,8 +41,10 @@ injectContentScript(tabId, {
 ```
 
 ```js
-const tabId = 42;
-injectContentScript(tabId, [
+injectContentScript({
+	tabId: 42,
+	frameId: 56
+}, [
 	{
 		js: [
 			'jquery.js',
