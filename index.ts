@@ -1,5 +1,5 @@
-type ContentScripts = NonNullable<chrome.runtime.Manifest['content_scripts']>;
 import chromeP from 'webext-polyfill-kinda';
+import type {Manifest} from 'webextension-polyfill';
 
 function castArray<A = unknown>(possibleArray: A | A[]): A[] {
 	if (Array.isArray(possibleArray)) {
@@ -16,7 +16,7 @@ interface Target {
 
 export async function injectContentScript(
 	target: number | Target,
-	scripts: ContentScripts | ContentScripts[0],
+	scripts: Manifest.ContentScript | Manifest.ContentScript[],
 ): Promise<void> {
 	const {frameId, tabId} = typeof target === 'object' ? target : {
 		tabId: target,
