@@ -1,4 +1,5 @@
 type ContentScripts = NonNullable<chrome.runtime.Manifest['content_scripts']>;
+import chromeP from 'webext-polyfill-kinda';
 
 function castArray<A = unknown>(possibleArray: A | A[]): A[] {
 	if (Array.isArray(possibleArray)) {
@@ -24,7 +25,7 @@ export async function injectContentScript(
 	const injections: Array<Promise<unknown>> = [];
 	for (const script of castArray(scripts)) {
 		for (const file of script.css ?? []) {
-			injections.push(chrome.tabs.insertCSS(tabId, {
+			injections.push(chromeP.tabs.insertCSS(tabId, {
 				file,
 				frameId,
 				runAt: script.run_at,
@@ -34,7 +35,7 @@ export async function injectContentScript(
 		}
 
 		for (const file of script.js ?? []) {
-			injections.push(chrome.tabs.executeScript(tabId, {
+			injections.push(chromeP.tabs.executeScript(tabId, {
 				file,
 				frameId,
 				runAt: script.run_at,
