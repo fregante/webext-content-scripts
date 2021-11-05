@@ -14,7 +14,7 @@ interface Target {
 	frameId: number;
 }
 
-export async function executeFunction<Fn extends (...args: unknown[]) => unknown>(
+export async function executeFunction<Fn extends (...args: any[]) => unknown>(
 	target: number | Target,
 	function_: string | Fn,
 	...args: unknown[]
