@@ -16,18 +16,19 @@ npm install webext-content-scripts
 
 ```js
 // This module is only offered as a ES Module
-import {injectContentScript} from 'webext-content-scripts';
+import {injectContentScript, executeFunction} from 'webext-content-scripts';
 ```
 
 ## Usage
 
 ### `injectContentScript(tabId, scripts)`
+### `injectContentScript({tabId, frameId}, scripts)`
 
 Like `chrome.tabs.executeScript` and `chrome.tabs.injectCSS` but with the same API as the manifest, so you can inject multiple JS and CSS at once. It accepts either an object or an array of objects.
 
 ```js
 const tabId = 42;
-injectContentScript(tabId, {
+await injectContentScript(tabId, {
 	run_at: 'document_idle',
 	all_frames: true,
 	match_about_blank: true,
@@ -41,7 +42,7 @@ injectContentScript(tabId, {
 ```
 
 ```js
-injectContentScript({
+await injectContentScript({
 	tabId: 42,
 	frameId: 56
 }, [
@@ -63,6 +64,46 @@ injectContentScript({
 	}
 ])
 ```
+
+### `executeFunction(tabId, function, ...arguments)`
+### `executeFunction({tabId, frameId}, function, ...arguments)`
+
+Like `chrome.tabs.executeScript`, except that it accepts a raw function to be executed in the chosen tab.
+
+```js
+const tabId = 10;
+
+const tabUrl = await executeFunction(tabId, () => {
+	alert('This code is run as a content script');
+	return location.href;
+});
+
+console.log(tabUrl);
+```
+
+Note: The function must be self-contained because it will be serialized.
+
+```js
+const tabId = 10;
+const catsAndDogs = "cute";
+
+await executeFunction(tabId, () => {
+	console.log(catsAndDogs); // ERROR: catsAndDogs will be undeclared and will throw an error
+});
+```
+
+you must pass it as arguments:
+
+
+```js
+const tabId = 10;
+const catsAndDogs = "cute";
+
+await executeFunction(tabId, (localCatsAndDogs) => {
+	console.log(localCatsAndDogs); // It logs "cute"
+}, catsAndDogs); // Argument
+```
+
 
 ## Related
 
