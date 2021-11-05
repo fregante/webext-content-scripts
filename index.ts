@@ -14,6 +14,24 @@ interface Target {
 	frameId: number;
 }
 
+export async function executeFunction<Fn extends (...args: unknown[]) => unknown>(
+	target: number | Target,
+	function_: string | Fn,
+	...args: unknown[]
+): Promise<ReturnType<Fn>> {
+	const {frameId, tabId} = typeof target === 'object' ? target : {
+		tabId: target,
+		frameId: 0,
+	};
+
+	const [result] = await chromeP.tabs.executeScript(tabId, {
+		code: `(${function_.toString()})(...${JSON.stringify(args)})`,
+		frameId,
+	}) as [ReturnType<Fn>];
+
+	return result;
+}
+
 export async function injectContentScript(
 	target: number | Target,
 	scripts: Manifest.ContentScript | Manifest.ContentScript[],
