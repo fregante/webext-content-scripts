@@ -24,6 +24,16 @@ export async function executeFunction<Fn extends (...args: any[]) => unknown>(
 		frameId: 0,
 	};
 
+	if ('scripting' in chrome) {
+		const [result] = await chrome.scripting.executeScript(tabId, {
+			func: function_,
+			args,
+			frameId,
+		}) as [ReturnType<Fn>];
+
+		return result;
+	}
+
 	const [result] = await chromeP.tabs.executeScript(tabId, {
 		code: `(${function_.toString()})(...${JSON.stringify(args)})`,
 		frameId,
