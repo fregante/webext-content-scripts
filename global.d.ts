@@ -5,11 +5,4 @@ declare global {
 	namespace browser {
 		const tabs: Tabs.Static;
 	}
-
-	namespace chrome {
-		interface Scripting {
-			executeScript(...args: unknown[]): Promise<unknown>;
-		}
-		const scripting: Scripting;
-	}
 }

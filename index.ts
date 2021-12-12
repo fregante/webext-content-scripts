@@ -16,7 +16,7 @@ interface Target {
 
 export async function executeFunction<Fn extends (...args: any[]) => unknown>(
 	target: number | Target,
-	function_: string | Fn,
+	function_: Fn,
 	...args: unknown[]
 ): Promise<ReturnType<Fn>> {
 	const {frameId, tabId} = typeof target === 'object' ? target : {
@@ -25,10 +25,13 @@ export async function executeFunction<Fn extends (...args: any[]) => unknown>(
 	};
 
 	if ('scripting' in chrome) {
-		const [result] = await chrome.scripting.executeScript(tabId, {
+		const [result] = await chrome.scripting.executeScript({
+			target: {
+				tabId,
+				frameIds: [frameId],
+			},
 			func: function_,
 			args,
-			frameId,
 		}) as [ReturnType<Fn>];
 
 		return result;
