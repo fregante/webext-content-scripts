@@ -10,6 +10,6 @@ declare global {
 		interface Scripting {
 			executeScript(...args: unknown[]): Promise<unknown>
 		}
-		const scripting: Scripting | void;
+		const scripting: Scripting;
 	}
 }
