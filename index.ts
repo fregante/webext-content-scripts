@@ -16,13 +16,26 @@ interface Target {
 
 export async function executeFunction<Fn extends (...args: any[]) => unknown>(
 	target: number | Target,
-	function_: string | Fn,
+	function_: Fn,
 	...args: unknown[]
 ): Promise<ReturnType<Fn>> {
 	const {frameId, tabId} = typeof target === 'object' ? target : {
 		tabId: target,
 		frameId: 0,
 	};
+
+	if ('scripting' in chrome) {
+		const [result] = await chrome.scripting.executeScript({
+			target: {
+				tabId,
+				frameIds: [frameId],
+			},
+			func: function_,
+			args,
+		}) as [ReturnType<Fn>];
+
+		return result;
+	}
 
 	const [result] = await chromeP.tabs.executeScript(tabId, {
 		code: `(${function_.toString()})(...${JSON.stringify(args)})`,
