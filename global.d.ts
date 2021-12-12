@@ -8,7 +8,7 @@ declare global {
 
 	namespace chrome {
 		interface Scripting {
-			executeScript(...args: unknown[]): Promise<unknown>
+			executeScript(...args: unknown[]): Promise<unknown>;
 		}
 		const scripting: Scripting;
 	}
