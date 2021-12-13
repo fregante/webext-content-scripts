@@ -1,5 +1,5 @@
 import chromeP from 'webext-polyfill-kinda';
-import type {Manifest, ContentScripts, ExtensionTypes} from 'webextension-polyfill';
+import type {ExtensionTypes} from 'webextension-polyfill';
 
 function castArray<A = unknown>(possibleArray: A | A[]): A[] {
 	if (Array.isArray(possibleArray)) {
