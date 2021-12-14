@@ -28,12 +28,6 @@
 		"test": "xo && tsc --noEmit",
 		"watch": "tsc --watch"
 	},
-	"xo": {
-		"envs": [
-			"browser",
-			"webextensions"
-		]
-	},
 	"dependencies": {
 		"webext-polyfill-kinda": "^0.9.0"
 	},
