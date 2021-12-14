@@ -24,6 +24,8 @@ import {injectContentScript, executeFunction} from 'webext-content-scripts';
 ### `injectContentScript(tabId, scripts)`
 ### `injectContentScript({tabId, frameId}, scripts)`
 
+Works on Manifest v2 and v3.
+
 Like `chrome.tabs.executeScript` and `chrome.tabs.injectCSS` but with the same API as the manifest, so you can inject multiple JS and CSS at once. It accepts either an object or an array of objects.
 
 ```js
