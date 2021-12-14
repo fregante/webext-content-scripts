@@ -1,7 +1,15 @@
 import chromeP from 'webext-polyfill-kinda';
-import type {Manifest, ExtensionTypes} from 'webextension-polyfill';
+import type {ExtensionTypes} from 'webextension-polyfill';
+import type {ContentScript} from './types';
 
 const gotScripting = typeof chrome === 'object' && 'scripting' in chrome;
+
+function castTarget(target: number | Target): Target {
+	return typeof target === 'object' ? target : {
+		tabId: target,
+		frameId: 0,
+	};
+}
 
 function castArray<A = unknown>(possibleArray: A | A[]): A[] {
 	if (Array.isArray(possibleArray)) {
@@ -10,6 +18,8 @@ function castArray<A = unknown>(possibleArray: A | A[]): A[] {
 
 	return [possibleArray];
 }
+
+type MaybeArray<X> = X | X[];
 
 interface Target {
 	tabId: number;
@@ -21,10 +31,7 @@ export async function executeFunction<Fn extends (...args: any[]) => unknown>(
 	function_: Fn,
 	...args: unknown[]
 ): Promise<ReturnType<Fn>> {
-	const {frameId, tabId} = typeof target === 'object' ? target : {
-		tabId: target,
-		frameId: 0,
-	};
+	const {frameId, tabId} = castTarget(target);
 
 	if (gotScripting) {
 		const [injection] = await chrome.scripting.executeScript({
@@ -147,33 +154,31 @@ export async function executeScript({
 
 export async function injectContentScript(
 	target: number | Target,
-	scripts: Manifest.ContentScript | Manifest.ContentScript[],
+	scripts: MaybeArray<ContentScript>,
 ): Promise<void> {
 	const {frameId, tabId} = typeof target === 'object' ? target : {
 		tabId: target,
 		frameId: 0,
 	};
 	const injections: Array<Promise<unknown>> = [];
-	for (const script of castArray(scripts)) {
-		for (const file of script.css ?? []) {
-			injections.push(chromeP.tabs.insertCSS(tabId, {
-				file,
-				frameId,
-				runAt: script.run_at,
-				allFrames: script.all_frames,
-				matchAboutBlank: script.match_about_blank,
-			}));
-		}
 
-		for (const file of script.js ?? []) {
-			injections.push(chromeP.tabs.executeScript(tabId, {
-				file,
-				frameId,
-				runAt: script.run_at,
-				allFrames: script.all_frames,
-				matchAboutBlank: script.match_about_blank,
-			}));
-		}
+	for (const script of castArray(scripts)) {
+		insertCSS({
+			tabId,
+			frameId,
+			files: script.css ?? [],
+			matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
+			runAt: script.runAt ?? script.run_at,
+		});
+
+		// It's ok if the order of scripts is not guaranteed between different blocks
+		void executeScript({
+			tabId,
+			frameId,
+			files: script.js ?? [],
+			matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
+			runAt: script.runAt ?? script.run_at,
+		});
 	}
 
 	await Promise.all(injections);

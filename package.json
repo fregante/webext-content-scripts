@@ -1,7 +1,7 @@
 {
 	"name": "webext-content-scripts",
 	"version": "0.11.1",
-	"description": "Utility functions to inject content scripts from a WebExtension.",
+	"description": "Utility functions to inject content scripts in WebExtensions, for Manifest v2 and v3",
 	"keywords": [
 		"contentscript",
 		"injection",
@@ -9,7 +9,12 @@
 		"chrome",
 		"firefox",
 		"browser",
-		"extension"
+		"extension",
+		"executefunction",
+		"executescript",
+		"insertcss",
+		"mv2",
+		"mv3"
 	],
 	"repository": "fregante/webext-content-scripts",
 	"funding": "https://github.com/sponsors/fregante",
@@ -20,7 +25,8 @@
 	"module": "index.js",
 	"files": [
 		"index.js",
-		"index.d.ts"
+		"index.d.ts",
+		"types.d.ts"
 	],
 	"scripts": {
 		"build": "tsc",
