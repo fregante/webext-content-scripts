@@ -104,6 +104,55 @@ await executeFunction(tabId, (localCatsAndDogs) => {
 }, catsAndDogs); // Argument
 ```
 
+### `insertCSS`
+
+Works on Manifest v2 and v3.
+
+Like `chrome.tabs.insertCSS` but it automatically picks `chrome.scripting.insertCSS` when available, and it accepts multiple files at once, in various formats (refer to the TypeScript types)
+
+```js
+insertCSS({
+	tabId: 1,
+	frameId: 20,
+	files: ['bootstrap.css', 'style.css'],
+});
+```
+
+```js
+insertCSS({
+	tabId: 1,
+	frameId: 20,
+	files: [
+		{file: 'bootstrap.css'},
+		{code: 'hmtl { color: red }'}
+	],
+});
+```
+
+### `executeScript`
+
+Works on Manifest v2 and v3.
+
+Like `chrome.tabs.executeScript` but it automatically picks `chrome.scripting.executeScript` when available, and it accepts multiple files at once, in various formats (refer to the TypeScript types)
+
+```js
+executeScript({
+	tabId: 1,
+	frameId: 20,
+	files: ['react.js', 'main.js'],
+});
+```
+
+```js
+executeScript({
+	tabId: 1,
+	frameId: 20,
+	files: [
+		{file: 'react.js'},
+		{code: 'console.log(42)'}, // This will fail on Manifest v3
+	],
+});
+```
 
 ## Related
 
