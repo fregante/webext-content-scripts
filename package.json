@@ -28,15 +28,6 @@
 		"test": "xo && tsc --noEmit",
 		"watch": "tsc --watch"
 	},
-	"xo": {
-		"envs": [
-			"browser",
-			"webextensions"
-		],
-		"rules": {
-			"@typescript-eslint/naming-convention": "off"
-		}
-	},
 	"dependencies": {
 		"webext-polyfill-kinda": "^0.9.0"
 	},
