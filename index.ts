@@ -1,6 +1,5 @@
 import chromeP from 'webext-polyfill-kinda';
-import type {Manifest} from 'webextension-polyfill';
-import type {ExtensionTypes} from 'webextension-polyfill';
+import type {Manifest, ExtensionTypes} from 'webextension-polyfill';
 
 const gotScripting = typeof chrome === 'object' && 'scripting' in chrome;
 
