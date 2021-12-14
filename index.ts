@@ -74,7 +74,7 @@ interface InjectionDetails {
 // eslint-disable-next-line @typescript-eslint/naming-convention -- It follows the native naming
 export function insertCSS({
 	tabId,
-	frameId,∂
+	frameId,
 	files,
 	allFrames,
 	matchAboutBlank,
