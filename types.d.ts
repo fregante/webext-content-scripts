@@ -1,3 +1,5 @@
+import type {ExtensionTypes} from 'webextension-polyfill';
+
 export interface ContentScript {
 	/**
 	* The list of CSS files to inject

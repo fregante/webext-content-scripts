@@ -2,6 +2,8 @@ import chromeP from 'webext-polyfill-kinda';
 import type {ExtensionTypes} from 'webextension-polyfill';
 import type {ContentScript} from './types';
 
+const gotScripting = typeof chrome === 'object' && 'scripting' in chrome;
+
 function castTarget(target: number | Target): Target {
 	return typeof target === 'object' ? target : {
 		tabId: target,
@@ -31,7 +33,7 @@ export async function executeFunction<Fn extends (...args: any[]) => unknown>(
 ): Promise<ReturnType<Fn>> {
 	const {frameId, tabId} = castTarget(target);
 
-	if ('scripting' in chrome) {
+	if (gotScripting) {
 		const [injection] = await chrome.scripting.executeScript({
 			target: {
 				tabId,
@@ -52,8 +54,6 @@ export async function executeFunction<Fn extends (...args: any[]) => unknown>(
 	return result;
 }
 
-const gotScripting = typeof chrome === 'object' && 'scripting' in chrome;
-
 function arrayOrUndefined<X>(value?: X): [X] | undefined {
 	return typeof value === 'undefined' ? undefined : [value];
 }
@@ -64,25 +64,10 @@ interface InjectionDetails {
 	matchAboutBlank?: boolean;
 	allFrames?: boolean;
 	runAt?: ExtensionTypes.RunAt;
-}
-
-interface CSSInjectionDetails extends InjectionDetails {
-	files: Array<{
+	files: string [] | Array<{
 		code: string;
 	} | {
 		file: string;
-	}>;
-}
-
-// eslint-disable-next-line @typescript-eslint/ban-types -- If fixed, it's not compatible with the native types
-interface ScriptInjectionDetails<Args extends [] = []> extends InjectionDetails {
-	files: Array<{
-		code: string;
-	} | {
-		file: string;
-	} | {
-		func: (...args: Args) => void;
-		args?: Args;
 	}>;
 }
 
@@ -93,8 +78,12 @@ export function insertCSS({
 	allFrames,
 	matchAboutBlank,
 	runAt,
-}: CSSInjectionDetails): void {
-	for (const content of files) {
+}: InjectionDetails): void {
+	for (let content of files) {
+		if (typeof content === 'string') {
+			content = {file: content};
+		}
+
 		if (gotScripting) {
 			void chrome.scripting.insertCSS({
 				target: {
@@ -124,17 +113,17 @@ export async function executeScript({
 	allFrames,
 	matchAboutBlank,
 	runAt,
-}: ScriptInjectionDetails): Promise<void> {
+}: InjectionDetails): Promise<void> {
 	let lastInjection: Promise<unknown> | undefined;
-	for (const content of files) {
+	for (let content of files) {
+		if (typeof content === 'string') {
+			content = {file: content};
+		}
+
 		if (gotScripting) {
 			if ('code' in content) {
 				throw new Error('chrome.scripting does not support injecting strings of `code`');
 			}
-
-			const injectable = 'file' in content
-				? {files: [content.file]}
-				: {func: content.func, args: content.args};
 
 			void chrome.scripting.executeScript({
 				target: {
@@ -142,7 +131,7 @@ export async function executeScript({
 					frameIds: arrayOrUndefined(frameId),
 					allFrames,
 				},
-				...injectable,
+				files: [content.file],
 			});
 		} else {
 			// Files are executed in order, but code isn’t, so it must wait the last script #31
@@ -181,7 +170,8 @@ export async function injectContentScript(
 			runAt: script.runAt ?? script.run_at,
 		});
 
-		await executeScript({
+		// It's ok if the order of scripts is not guaranteed between different blocks
+		void executeScript({
 			tabId,
 			frameId,
 			files: script.js ?? [],
