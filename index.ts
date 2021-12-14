@@ -1,5 +1,13 @@
 import chromeP from 'webext-polyfill-kinda';
 import type {ExtensionTypes} from 'webextension-polyfill';
+import type {ContentScript} from './types';
+
+function castTarget(target: number | Target): Target {
+	return typeof target === 'object' ? target : {
+		tabId: target,
+		frameId: 0,
+	};
+}
 
 function castArray<A = unknown>(possibleArray: A | A[]): A[] {
 	if (Array.isArray(possibleArray)) {
@@ -9,7 +17,7 @@ function castArray<A = unknown>(possibleArray: A | A[]): A[] {
 	return [possibleArray];
 }
 
-type MaybeArray<X> = X|Array<X>;
+type MaybeArray<X> = X | X[];
 
 interface Target {
 	tabId: number;
@@ -21,10 +29,7 @@ export async function executeFunction<Fn extends (...args: any[]) => unknown>(
 	function_: Fn,
 	...args: unknown[]
 ): Promise<ReturnType<Fn>> {
-	const {frameId, tabId} = typeof target === 'object' ? target : {
-		tabId: target,
-		frameId: 0,
-	};
+	const {frameId, tabId} = castTarget(target);
 
 	if ('scripting' in chrome) {
 		const [injection] = await chrome.scripting.executeScript({
@@ -47,48 +52,114 @@ export async function executeFunction<Fn extends (...args: any[]) => unknown>(
 	return result;
 }
 
-export interface ContentScript {
-	/**
-	 * The list of CSS files to inject
-	 */
-	css?: string[] | ExtensionTypes.ExtensionFileOrCode[];
+const gotScripting = typeof chrome === 'object' && 'scripting' in chrome;
 
-	/**
-	 * The list of JS files to inject
-	 */
-	js?: string[] | ExtensionTypes.ExtensionFileOrCode[];
+function arrayOrUndefined<X>(value?: X): [X] | undefined {
+	return typeof value === 'undefined' ? undefined : [value];
+}
 
-	/**
-	 * Prefer `allFrames`
-	 */
-	all_frames?: boolean;
-
-	/**
-	 * If allFrames is <code>true</code>, implies that the JavaScript or CSS should be injected into all frames of current page.
-	 * By default, it's <code>false</code> and is only injected into the top frame.
-	 */
+interface InjectionDetails {
+	tabId: number;
+	frameId?: number;
+	matchAboutBlank?: boolean;
 	allFrames?: boolean;
+	runAt?: ExtensionTypes.RunAt;
+}
 
-	/**
-	 * Prefer `matchAboutBlank`
-	 */
-	match_about_blank?: boolean;
+interface CSSInjectionDetails extends InjectionDetails {
+	files: Array<{
+		code: string;
+	} | {
+		file: string;
+	}>;
+}
 
-	/**
-	 * If matchAboutBlank is true, then the code is also injected in about:blank and about:srcdoc frames if your extension has
-	 * access to its parent document. Code cannot be inserted in top-level about:-frames. By default it is <code>false</code>.
-	 */
-	 matchAboutBlank?: boolean;
+// eslint-disable-next-line @typescript-eslint/ban-types -- If fixed, it's not compatible with the native types
+interface ScriptInjectionDetails<Args extends [] = []> extends InjectionDetails {
+	files: Array<{
+		code: string;
+	} | {
+		file: string;
+	} | {
+		func: (...args: Args) => void;
+		args?: Args;
+	}>;
+}
 
-	/**
-	 * Prefer `runAt`
-	 */
-	 run_at?: ExtensionTypes.RunAt;
+export function insertCSS({
+	tabId,
+	frameId,
+	files,
+	allFrames,
+	matchAboutBlank,
+	runAt,
+}: CSSInjectionDetails): void {
+	for (const content of files) {
+		if (gotScripting) {
+			void chrome.scripting.insertCSS({
+				target: {
+					tabId,
+					frameIds: arrayOrUndefined(frameId),
+					allFrames,
+				},
+				files: 'file' in content ? [content.file] : undefined,
+				css: 'code' in content ? content.code : undefined,
+			});
+		} else {
+			void chromeP.tabs.insertCSS(tabId, {
+				...content,
+				matchAboutBlank,
+				allFrames,
+				frameId,
+				runAt: runAt ?? 'document_start', // CSS should prefer `document_start` when unspecified
+			});
+		}
+	}
+}
 
-	 /**
-		* The soonest that the JavaScript or CSS will be injected into the tab. Defaults to "document_idle".
-		*/
-	 runAt?: ExtensionTypes.RunAt;
+export async function executeScript({
+	tabId,
+	frameId,
+	files,
+	allFrames,
+	matchAboutBlank,
+	runAt,
+}: ScriptInjectionDetails): Promise<void> {
+	let lastInjection: Promise<unknown> | undefined;
+	for (const content of files) {
+		if (gotScripting) {
+			if ('code' in content) {
+				throw new Error('chrome.scripting does not support injecting strings of `code`');
+			}
+
+			const injectable = 'file' in content
+				? {files: [content.file]}
+				: {func: content.func, args: content.args};
+
+			void chrome.scripting.executeScript({
+				target: {
+					tabId,
+					frameIds: arrayOrUndefined(frameId),
+					allFrames,
+				},
+				...injectable,
+			});
+		} else {
+			// Files are executed in order, but code isn’t, so it must wait the last script #31
+			if ('code' in content) {
+				// eslint-disable-next-line no-await-in-loop -- On purpose, to serialize injection
+				await lastInjection;
+			}
+
+			lastInjection = chromeP.tabs.executeScript(tabId, {
+				...content,
+				matchAboutBlank,
+				allFrames,
+				frameId,
+				runAt,
+			});
+		}
+	}
 }
 
 export async function injectContentScript(
@@ -102,27 +173,21 @@ export async function injectContentScript(
 	const injections: Array<Promise<unknown>> = [];
 
 	for (const script of castArray(scripts)) {
-		for (const file of script.css ?? []) {
-			const content = typeof file === 'string' ? {file} : file;
-			injections.push(chromeP.tabs.insertCSS(tabId, {
-				...content,
-				frameId,
-				runAt: script.runAt ?? script.run_at,
-				allFrames: script.allFrames ?? script.all_frames,
-				matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
-			}));
-		}
+		insertCSS({
+			tabId,
+			frameId,
+			files: script.css ?? [],
+			matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
+			runAt: script.runAt ?? script.run_at,
+		});
 
-		for (const file of script.js ?? []) {
-			const content = typeof file === 'string' ? {file} : file;
-			injections.push(chromeP.tabs.executeScript(tabId, {
-				...content,
-				frameId,
-				runAt: script.runAt ?? script.run_at,
-				allFrames: script.allFrames ?? script.all_frames,
-				matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
-			}));
-		}
+		await executeScript({
+			tabId,
+			frameId,
+			files: script.js ?? [],
+			matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
+			runAt: script.runAt ?? script.run_at,
+		});
 	}
 
 	await Promise.all(injections);

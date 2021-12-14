@@ -20,7 +20,8 @@
 	"module": "index.js",
 	"files": [
 		"index.js",
-		"index.d.ts"
+		"index.d.ts",
+		"types.d.ts"
 	],
 	"scripts": {
 		"build": "tsc",
@@ -32,7 +33,10 @@
 		"envs": [
 			"browser",
 			"webextensions"
-		]
+		],
+		"rules": {
+			"@typescript-eslint/naming-convention": "off"
+		}
 	},
 	"dependencies": {
 		"webext-polyfill-kinda": "^0.9.0"
