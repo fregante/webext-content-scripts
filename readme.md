@@ -1,8 +1,11 @@
 # webext-content-scripts [![npm version](https://img.shields.io/npm/v/webext-content-scripts.svg)](https://www.npmjs.com/package/webext-content-scripts)
 
-> Utility functions to inject content scripts from a WebExtension.
+> Utility functions to inject content scripts in WebExtensions, for Manifest v2 and v3.
 
-Tested in Chrome, Firefox, and Safari.
+- Browsers: Chrome, Firefox, and Safari
+- Manifest: v2 and v3
+- Permissions: In manifest v3, you'll need the `scripting` permission
+- Context: They can be called from any context that has access to the `chrome.tabs` or `chrome.scripting` APIs
 
 **Sponsored by [PixieBrix](https://www.pixiebrix.com)** :tada:
 
@@ -16,22 +19,79 @@ npm install webext-content-scripts
 
 ```js
 // This module is only offered as a ES Module
-import {injectContentScript, executeFunction} from 'webext-content-scripts';
+import {
+	executeScript,
+	insertCSS,
+	injectContentScript,
+	executeFunction
+} from 'webext-content-scripts';
 ```
 
 ## Usage
 
+### `executeScript`
+
+Like `chrome.tabs.executeScript` but:
+
+- it works on Manifest v3
+- it can execute multiple scripts at once
+
+```js
+executeScript({
+	tabId: 1,
+	frameId: 20,
+	files: ['react.js', 'main.js'],
+});
+```
+
+```js
+executeScript({
+	tabId: 1,
+	frameId: 20,
+	files: [
+		{file: 'react.js'},
+		{code: 'console.log(42)'}, // This will fail on Manifest v3
+	],
+});
+```
+
+### `insertCSS`
+
+Like `chrome.tabs.insertCSS` but:
+
+- it works on Manifest v3
+- it can insert multiple styles at once
+
+```js
+insertCSS({
+	tabId: 1,
+	frameId: 20,
+	files: ['bootstrap.css', 'style.css'],
+});
+```
+
+```js
+insertCSS({
+	tabId: 1,
+	frameId: 20,
+	files: [
+		{file: 'bootstrap.css'},
+		{code: 'hmtl { color: red }'}
+	],
+});
+```
+
 ### `injectContentScript(tabId, scripts)`
 ### `injectContentScript({tabId, frameId}, scripts)`
 
-Like `chrome.tabs.executeScript` and `chrome.tabs.injectCSS` but with the same API as the manifest, so you can inject multiple JS and CSS at once. It accepts either an object or an array of objects.
+It combines `executeScript` and `injectCSS` in a single call. You can pass the entire `content_script` object from the manifest too, without change (even with `snake_case_keys`). It accepts either an object or an array of objects.
 
 ```js
 const tabId = 42;
 await injectContentScript(tabId, {
-	run_at: 'document_idle',
-	all_frames: true,
-	match_about_blank: true,
+	runAt: 'document_idle',
+	allFrames: true,
+	matchAboutBlank: true,
 	js: [
 		'contentscript.js'
 	],
@@ -57,12 +117,19 @@ await injectContentScript({
 		],
 	},
 	{
-	run_at: 'document_start',
+	runAt: 'document_start',
 		css: [
 			'more-styles.css'
 		],
 	}
 ])
+```
+
+```js
+const tabId = 42;
+const scripts = browser.runtime.getManifest().content_scripts;
+// `matches`, `exclude_matches`, etc are ignored, so you can inject them on any host that you have permission to
+await injectContentScript(tabId, scripts);
 ```
 
 ### `executeFunction(tabId, function, ...arguments)`
@@ -103,7 +170,6 @@ await executeFunction(tabId, (localCatsAndDogs) => {
 	console.log(localCatsAndDogs); // It logs "cute"
 }, catsAndDogs); // Argument
 ```
-
 
 ## Related
 
