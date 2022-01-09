@@ -207,5 +207,5 @@ const blockedPrefixes = [
 
 export function isScriptableUrl(url: string): boolean {
 	const cleanUrl = url.replace(/^https?:\/\//, '');
-	return blockedPrefixes.every(blocked => cleanUrl.startsWith(blocked));
+	return blockedPrefixes.every(blocked => !cleanUrl.startsWith(blocked));
 }
