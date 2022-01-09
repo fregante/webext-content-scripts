@@ -183,3 +183,29 @@ export async function injectContentScript(
 
 	await Promise.all(injections);
 }
+
+// Sourced from:
+// https://source.chromium.org/chromium/chromium/src/+/main:extensions/common/extension_urls.cc;drc=6b42116fe3b3d93a77750bdcc07948e98a728405;l=29
+// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Content_scripts
+const blockedPrefixes = [
+	'chrome.google.com/webstore', // Host *and* pathname
+	'accounts-static.cdn.mozilla.net',
+	'accounts.firefox.com',
+	'addons.cdn.mozilla.net',
+	'addons.mozilla.org',
+	'api.accounts.firefox.com',
+	'content.cdn.mozilla.net',
+	'discovery.addons.mozilla.org',
+	'input.mozilla.org',
+	'install.mozilla.org',
+	'oauth.accounts.firefox.com',
+	'profile.accounts.firefox.com',
+	'support.mozilla.org',
+	'sync.services.mozilla.com',
+	'testpilot.firefox.com',
+];
+
+export function isScriptableUrl(url: string): boolean {
+	const cleanUrl = url.replace(/^https?:\/\//, '');
+	return blockedPrefixes.every(blocked => cleanUrl.startsWith(blocked));
+}

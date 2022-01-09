@@ -171,15 +171,31 @@ await executeFunction(tabId, (localCatsAndDogs) => {
 }, catsAndDogs); // Argument
 ```
 
+### `isScriptableUrl(url)`
+
+Browsers block access to some URLs for security reasons. This function will check whether a passed URL is blocked. Permissions and the manifest are not checked, this function is completely static.
+
+More info may be found on:
+
+- https://stackoverflow.com/q/11613371/288906
+- https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Content_scripts
+
+```js
+const url = 'https://addons.mozilla.org/en-US/firefox/addon/ghosttext/';
+if (isScriptableUrl(url)) {
+	console.log('I can inject content script to this page if permitted')
+} else {
+	console.log('Content scripts are never allowed on this page');
+}
+```
+
 ## Related
 
-- [webext-options-sync](https://github.com/fregante/webext-options-sync) - Helps you manage and autosave your extension's options. Chrome and Firefox.
-- [webext-storage-cache](https://github.com/fregante/webext-storage-cache) - Map-like promised cache storage with expiration. Chrome and Firefox
-- [webext-domain-permission-toggle](https://github.com/fregante/webext-domain-permission-toggle) - Browser-action context menu to request permission for the current tab. Chrome and Firefox.
+- [webext-tools](https://github.com/fregante/webext-tools) - Utility functions for Web Extensions.
+- [webext-domain-permission-toggle](https://github.com/fregante/webext-domain-permission-toggle) - Browser-action context menu to request permission for the current tab.
 - [webext-additional-permissions](https://github.com/fregante/webext-additional-permissions) - Get any optional permissions that users have granted you.
-- [webext-detect-page](https://github.com/fregante/webext-detect-page) - Detects where the current browser extension code is being run. Chrome and Firefox.
-- [web-ext-submit](https://github.com/fregante/web-ext-submit) - Wrapper around Mozilla’s web-ext to submit extensions to AMO.
-- [Awesome-WebExtensions](https://github.com/fregante/Awesome-WebExtensions) - A curated list of awesome resources for WebExtensions development.
+- [webext-dynamic-content-scripts](https://github.com/fregante/webext-dynamic-content-scripts) - Automatically registers your content_scripts on domains added via permission.request
+- [More…](https://github.com/fregante/webext-fun)
 
 ## License
 
