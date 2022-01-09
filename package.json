@@ -1,6 +1,6 @@
 {
 	"name": "webext-content-scripts",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Utility functions to inject content scripts in WebExtensions, for Manifest v2 and v3",
 	"keywords": [
 		"contentscript",
