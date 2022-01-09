@@ -187,25 +187,29 @@ export async function injectContentScript(
 // Sourced from:
 // https://source.chromium.org/chromium/chromium/src/+/main:extensions/common/extension_urls.cc;drc=6b42116fe3b3d93a77750bdcc07948e98a728405;l=29
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Content_scripts
-const blockedPrefixes = [
-	'chrome.google.com/webstore', // Host *and* pathname
-	'accounts-static.cdn.mozilla.net',
-	'accounts.firefox.com',
-	'addons.cdn.mozilla.net',
-	'addons.mozilla.org',
-	'api.accounts.firefox.com',
-	'content.cdn.mozilla.net',
-	'discovery.addons.mozilla.org',
-	'input.mozilla.org',
-	'install.mozilla.org',
-	'oauth.accounts.firefox.com',
-	'profile.accounts.firefox.com',
-	'support.mozilla.org',
-	'sync.services.mozilla.com',
-	'testpilot.firefox.com',
+const blockedSites = [
+	'https://chrome.google.com/webstore', // Host *and* pathname
+	'https://accounts-static.cdn.mozilla.net',
+	'https://accounts.firefox.com',
+	'https://addons.cdn.mozilla.net',
+	'https://addons.mozilla.org',
+	'https://api.accounts.firefox.com',
+	'https://content.cdn.mozilla.net',
+	'https://discovery.addons.mozilla.org',
+	'https://input.mozilla.org',
+	'https://install.mozilla.org',
+	'https://oauth.accounts.firefox.com',
+	'https://profile.accounts.firefox.com',
+	'https://support.mozilla.org',
+	'https://sync.services.mozilla.com',
+	'https://testpilot.firefox.com',
 ];
 
+// Sourced from:
+// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Match_patterns#scheme
+const allowedProtocols = /^(https?|wss?|ftp|data|file|(chrome-|moz-|safari-)?extension):/
+
 export function isScriptableUrl(url: string): boolean {
-	const cleanUrl = url.replace(/^https?:\/\//, '');
-	return blockedPrefixes.every(blocked => !cleanUrl.startsWith(blocked));
+	const cleanUrl = url.replace(/^http:/, 'https:');
+	return (url === 'about:blank' || allowedProtocols.test(url)) && blockedSites.every(blocked => !cleanUrl.startsWith(blocked));
 }
