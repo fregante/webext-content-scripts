@@ -1,6 +1,6 @@
 import chromeP from 'webext-polyfill-kinda';
 import type {ExtensionTypes} from 'webextension-polyfill';
-import type {ContentScript} from './types';
+import type {ContentScript} from './types.js';
 
 const gotScripting = typeof chrome === 'object' && 'scripting' in chrome;
 
