@@ -72,21 +72,21 @@ interface InjectionDetails {
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention -- It follows the native naming
-export function insertCSS({
+export async function insertCSS({
 	tabId,
 	frameId,
 	files,
 	allFrames,
 	matchAboutBlank,
 	runAt,
-}: InjectionDetails): void {
-	for (let content of files) {
+}: InjectionDetails): Promise<void> {
+	await asyncForEach<typeof files[number]>(files, async content => {
 		if (typeof content === 'string') {
 			content = {file: content};
 		}
 
 		if (gotScripting) {
-			void chrome.scripting.insertCSS({
+			return chrome.scripting.insertCSS({
 				target: {
 					tabId,
 					frameIds: arrayOrUndefined(frameId),
@@ -95,16 +95,16 @@ export function insertCSS({
 				files: 'file' in content ? [content.file] : undefined,
 				css: 'code' in content ? content.code : undefined,
 			});
-		} else {
-			void chromeP.tabs.insertCSS(tabId, {
-				...content,
-				matchAboutBlank,
-				allFrames,
-				frameId,
-				runAt: runAt ?? 'document_start', // CSS should prefer `document_start` when unspecified
-			});
 		}
-	}
+
+		return chromeP.tabs.insertCSS(tabId, {
+			...content,
+			matchAboutBlank,
+			allFrames,
+			frameId,
+			runAt: runAt ?? 'document_start', // CSS should prefer `document_start` when unspecified
+		});
+	});
 }
 
 export async function executeScript({
