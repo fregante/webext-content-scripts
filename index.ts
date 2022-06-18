@@ -72,21 +72,21 @@ interface InjectionDetails {
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention -- It follows the native naming
-export function insertCSS({
+export async function insertCSS({
 	tabId,
 	frameId,
 	files,
 	allFrames,
 	matchAboutBlank,
 	runAt,
-}: InjectionDetails): void {
-	for (let content of files) {
+}: InjectionDetails): Promise<void> {
+	await Promise.all(files.map(async content => {
 		if (typeof content === 'string') {
 			content = {file: content};
 		}
 
 		if (gotScripting) {
-			void chrome.scripting.insertCSS({
+			return chrome.scripting.insertCSS({
 				target: {
 					tabId,
 					frameIds: arrayOrUndefined(frameId),
@@ -95,16 +95,16 @@ export function insertCSS({
 				files: 'file' in content ? [content.file] : undefined,
 				css: 'code' in content ? content.code : undefined,
 			});
-		} else {
-			void chromeP.tabs.insertCSS(tabId, {
-				...content,
-				matchAboutBlank,
-				allFrames,
-				frameId,
-				runAt: runAt ?? 'document_start', // CSS should prefer `document_start` when unspecified
-			});
 		}
-	}
+
+		return chromeP.tabs.insertCSS(tabId, {
+			...content,
+			matchAboutBlank,
+			allFrames,
+			frameId,
+			runAt: runAt ?? 'document_start', // CSS should prefer `document_start` when unspecified
+		});
+	}));
 }
 
 export async function executeScript({
@@ -156,30 +156,25 @@ export async function injectContentScript(
 	target: number | Target,
 	scripts: MaybeArray<ContentScript>,
 ): Promise<void> {
-	const {frameId, tabId} = typeof target === 'object' ? target : {
-		tabId: target,
-		frameId: 0,
-	};
-	const injections: Array<Promise<unknown>> = [];
+	const {frameId, tabId} = castTarget(target);
 
-	for (const script of castArray(scripts)) {
+	const injections = castArray(scripts).flatMap(script => [
 		insertCSS({
 			tabId,
 			frameId,
 			files: script.css ?? [],
 			matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
 			runAt: script.runAt ?? script.run_at,
-		});
+		}),
 
-		// It's ok if the order of scripts is not guaranteed between different blocks
-		void executeScript({
+		executeScript({
 			tabId,
 			frameId,
 			files: script.js ?? [],
 			matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
 			runAt: script.runAt ?? script.run_at,
-		});
-	}
+		}),
+	]);
 
 	await Promise.all(injections);
 }
