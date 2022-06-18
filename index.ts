@@ -80,7 +80,7 @@ export async function insertCSS({
 	matchAboutBlank,
 	runAt,
 }: InjectionDetails): Promise<void> {
-	await asyncForEach<typeof files[number]>(files, async content => {
+	await Promise.all(files.map(async content => {
 		if (typeof content === 'string') {
 			content = {file: content};
 		}
@@ -104,7 +104,7 @@ export async function insertCSS({
 			frameId,
 			runAt: runAt ?? 'document_start', // CSS should prefer `document_start` when unspecified
 		});
-	});
+	}));
 }
 
 export async function executeScript({
@@ -156,30 +156,25 @@ export async function injectContentScript(
 	target: number | Target,
 	scripts: MaybeArray<ContentScript>,
 ): Promise<void> {
-	const {frameId, tabId} = typeof target === 'object' ? target : {
-		tabId: target,
-		frameId: 0,
-	};
-	const injections: Array<Promise<unknown>> = [];
+	const {frameId, tabId} = castTarget(target);
 
-	for (const script of castArray(scripts)) {
+	const injections = castArray(scripts).flatMap(script => [
 		insertCSS({
 			tabId,
 			frameId,
 			files: script.css ?? [],
 			matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
 			runAt: script.runAt ?? script.run_at,
-		});
+		}),
 
-		// It's ok if the order of scripts is not guaranteed between different blocks
-		void executeScript({
+		executeScript({
 			tabId,
 			frameId,
 			files: script.js ?? [],
 			matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
 			runAt: script.runAt ?? script.run_at,
-		});
-	}
+		}),
+	]);
 
 	await Promise.all(injections);
 }
