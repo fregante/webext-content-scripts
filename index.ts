@@ -15,6 +15,10 @@ interface Target {
 	frameId: number;
 }
 
+interface InjectionOptions {
+	ignoreTargetErrors?: boolean;
+}
+
 function castTarget(target: number | Target): Target {
 	return typeof target === 'object' ? target : {
 		tabId: target,
@@ -90,15 +94,19 @@ interface InjectionDetails {
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention -- It follows the native naming
-export async function insertCSS({
-	tabId,
-	frameId,
-	files,
-	allFrames,
-	matchAboutBlank,
-	runAt,
-}: InjectionDetails): Promise<void> {
-	await Promise.all(files.map(async content => {
+export async function insertCSS(
+	{
+		tabId,
+		frameId,
+		files,
+		allFrames,
+		matchAboutBlank,
+		runAt,
+	}: InjectionDetails,
+
+	{ignoreTargetErrors}: InjectionOptions = {},
+): Promise<void> {
+	const everyInsertion = Promise.all(files.map(async content => {
 		if (typeof content === 'string') {
 			content = {file: content};
 		}
@@ -123,16 +131,26 @@ export async function insertCSS({
 			runAt: runAt ?? 'document_start', // CSS should prefer `document_start` when unspecified
 		});
 	}));
+
+	if (ignoreTargetErrors) {
+		await catchTargetInjectionErrors(everyInsertion);
+	} else {
+		await everyInsertion;
+	}
 }
 
-export async function executeScript({
-	tabId,
-	frameId,
-	files,
-	allFrames,
-	matchAboutBlank,
-	runAt,
-}: InjectionDetails): Promise<void> {
+export async function executeScript(
+	{
+		tabId,
+		frameId,
+		files,
+		allFrames,
+		matchAboutBlank,
+		runAt,
+	}: InjectionDetails,
+
+	{ignoreTargetErrors}: InjectionOptions = {},
+): Promise<void> {
 	let lastInjection: Promise<unknown> | undefined;
 	for (let content of files) {
 		if (typeof content === 'string') {
@@ -144,7 +162,7 @@ export async function executeScript({
 				throw new Error('chrome.scripting does not support injecting strings of `code`');
 			}
 
-			void chrome.scripting.executeScript({
+			lastInjection = chrome.scripting.executeScript({
 				target: {
 					tabId,
 					frameIds: arrayOrUndefined(frameId),
@@ -152,6 +170,10 @@ export async function executeScript({
 				},
 				files: [content.file],
 			});
+
+			if (ignoreTargetErrors) {
+				void catchTargetInjectionErrors(lastInjection);
+			}
 		} else {
 			// Files are executed in order, but code isn’t, so it must wait the last script #31
 			if ('code' in content) {
@@ -173,6 +195,7 @@ export async function executeScript({
 export async function injectContentScript(
 	target: number | Target,
 	scripts: MaybeArray<ContentScript>,
+	{ignoreTargetErrors}: InjectionOptions = {},
 ): Promise<void> {
 	const {frameId, tabId, allFrames} = castAllFramesTarget(target);
 
@@ -196,7 +219,11 @@ export async function injectContentScript(
 		}),
 	]);
 
-	await Promise.all(injections);
+	if (ignoreTargetErrors) {
+		await catchTargetInjectionErrors(Promise.all(injections));
+	} else {
+		await Promise.all(injections);
+	}
 }
 
 // Sourced from:
@@ -223,4 +250,17 @@ const blockedPrefixes = [
 export function isScriptableUrl(url: string): boolean {
 	const cleanUrl = url.replace(/^https?:\/\//, '');
 	return blockedPrefixes.every(blocked => !cleanUrl.startsWith(blocked));
+}
+
+const targetErrors = /^No frame with id \d+ in tab \d+.$|^No tab with id: \d+.$|^The tab was closed.$|^The frame was removed.$/;
+
+async function catchTargetInjectionErrors(promise: Promise<unknown>): Promise<void> {
+	try {
+		await promise;
+	} catch (error) {
+		// @ts-expect-error Optional chaining is good enough
+		if (!targetErrors.test(error?.message)) {
+			throw error;
+		}
+	}
 }

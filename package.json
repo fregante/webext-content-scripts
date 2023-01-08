@@ -36,6 +36,8 @@
 	},
 	"xo": {
 		"rules": {
+			"unicorn/prefer-ternary": "off",
+			"@typescript-eslint/no-implicit-any-catch": "off",
 			"@typescript-eslint/consistent-type-definitions": "off"
 		}
 	},
