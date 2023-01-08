@@ -4,10 +4,33 @@ import type {ContentScript} from './types.js';
 
 const gotScripting = typeof chrome === 'object' && 'scripting' in chrome;
 
+interface AllFramesTarget {
+	tabId: number;
+	frameId: number | undefined;
+	allFrames: boolean;
+}
+
+interface Target {
+	tabId: number;
+	frameId: number;
+}
+
 function castTarget(target: number | Target): Target {
 	return typeof target === 'object' ? target : {
 		tabId: target,
 		frameId: 0,
+	};
+}
+
+function castAllFramesTarget(target: number | Target): AllFramesTarget {
+	if (typeof target === 'object') {
+		return {...target, allFrames: false};
+	}
+
+	return {
+		tabId: target,
+		frameId: undefined,
+		allFrames: true,
 	};
 }
 
@@ -20,11 +43,6 @@ function castArray<A = unknown>(possibleArray: A | A[]): A[] {
 }
 
 type MaybeArray<X> = X | X[];
-
-interface Target {
-	tabId: number;
-	frameId: number;
-}
 
 export async function executeFunction<Fn extends (...args: any[]) => unknown>(
 	target: number | Target,
@@ -156,12 +174,13 @@ export async function injectContentScript(
 	target: number | Target,
 	scripts: MaybeArray<ContentScript>,
 ): Promise<void> {
-	const {frameId, tabId} = castTarget(target);
+	const {frameId, tabId, allFrames} = castAllFramesTarget(target);
 
 	const injections = castArray(scripts).flatMap(script => [
 		insertCSS({
 			tabId,
 			frameId,
+			allFrames,
 			files: script.css ?? [],
 			matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
 			runAt: script.runAt ?? script.run_at,
@@ -170,6 +189,7 @@ export async function injectContentScript(
 		executeScript({
 			tabId,
 			frameId,
+			allFrames,
 			files: script.js ?? [],
 			matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
 			runAt: script.runAt ?? script.run_at,
