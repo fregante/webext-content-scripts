@@ -23,7 +23,7 @@ import {
 	executeScript,
 	insertCSS,
 	injectContentScript,
-	executeFunction
+	executeFunction,
 } from 'webext-content-scripts';
 ```
 
@@ -82,6 +82,7 @@ insertCSS({
 ```
 
 ### `injectContentScript(tabId, scripts)`
+
 ### `injectContentScript({tabId, frameId}, scripts)`
 
 It combines `executeScript` and `injectCSS` in a single call. You can pass the entire `content_script` object from the manifest too, without change (even with `snake_case_keys`). It accepts either an object or an array of objects.
@@ -133,6 +134,7 @@ await injectContentScript(tabId, scripts);
 ```
 
 ### `executeFunction(tabId, function, ...arguments)`
+
 ### `executeFunction({tabId, frameId}, function, ...arguments)`
 
 Like `chrome.tabs.executeScript`, except that it accepts a raw function to be executed in the chosen tab.
@@ -152,7 +154,7 @@ Note: The function must be self-contained because it will be serialized.
 
 ```js
 const tabId = 10;
-const catsAndDogs = "cute";
+const catsAndDogs = 'cute';
 
 await executeFunction(tabId, () => {
 	console.log(catsAndDogs); // ERROR: catsAndDogs will be undeclared and will throw an error
@@ -161,10 +163,9 @@ await executeFunction(tabId, () => {
 
 you must pass it as arguments:
 
-
 ```js
 const tabId = 10;
-const catsAndDogs = "cute";
+const catsAndDogs = 'cute';
 
 await executeFunction(tabId, (localCatsAndDogs) => {
 	console.log(localCatsAndDogs); // It logs "cute"
@@ -183,7 +184,7 @@ More info may be found on:
 ```js
 const url = 'https://addons.mozilla.org/en-US/firefox/addon/ghosttext/';
 if (isScriptableUrl(url)) {
-	console.log('I can inject content script to this page if permitted')
+	console.log('I can inject content script to this page if permitted');
 } else {
 	console.log('Content scripts are never allowed on this page');
 }
