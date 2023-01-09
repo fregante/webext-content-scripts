@@ -174,7 +174,7 @@ await executeFunction(tabId, (localCatsAndDogs) => {
 
 ### `isScriptableUrl(url)`
 
-Browsers block access to some URLs for security reasons. This function will check whether a passed URL is blocked. Permissions and the manifest are not checked, this function is completely static.
+Browsers block access to some URLs for security reasons. This function will check whether a passed URL is blocked. Permissions and the manifest are not checked, this function is completely static. It will also returns `false` for any URL that doesn't start with `http`.
 
 More info may be found on:
 
