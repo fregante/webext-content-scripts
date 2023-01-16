@@ -94,6 +94,9 @@ injectContentScript(1, scripts);
 injectContentScript([1, 2], scripts)
 injectContentScript({tabId: 1, frameId: 0}, scripts);
 injectContentScript([{tabId: 1, frameId: 0}, {tabId: 23, frameId: 98765}], scripts);
+
+// You can also use the exported `getTabsByUrl` utility to inject by URL as well
+injectContentScript(await getTabsByUrl(['https://example.com/*']), scripts);
 ```
 
 ### Examples

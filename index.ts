@@ -192,6 +192,15 @@ export async function executeScript(
 	}
 }
 
+export async function getTabsByUrl(patterns: string[]): Promise<number[]> {
+	if (patterns.length === 0) {
+		return [];
+	}
+
+	const tabs = await chromeP.tabs.query({url: patterns});
+	return tabs.map(tab => tab.id).filter((id): id is number => typeof id === 'number');
+}
+
 export async function injectContentScript(
 	where: MaybeArray<number | Target>,
 	scripts: MaybeArray<ContentScript>,
