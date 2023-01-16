@@ -193,12 +193,24 @@ export async function executeScript(
 }
 
 export async function injectContentScript(
-	target: number | Target,
+	where: MaybeArray<number | Target>,
+	scripts: MaybeArray<ContentScript>,
+	options: InjectionOptions = {},
+): Promise<void> {
+	const targets = castArray(where);
+
+	await Promise.all(
+		targets.map(
+			async target => injectContentScriptInSpecificTarget(castAllFramesTarget(target), scripts, options),
+		),
+	);
+}
+
+async function injectContentScriptInSpecificTarget(
+	{frameId, tabId, allFrames}: AllFramesTarget,
 	scripts: MaybeArray<ContentScript>,
 	{ignoreTargetErrors}: InjectionOptions = {},
 ): Promise<void> {
-	const {frameId, tabId, allFrames} = castAllFramesTarget(target);
-
 	const injections = castArray(scripts).flatMap(script => [
 		insertCSS({
 			tabId,

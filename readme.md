@@ -81,17 +81,28 @@ insertCSS({
 });
 ```
 
-### `injectContentScript(tabId, scripts)`
-
-### `injectContentScript({tabId, frameId}, scripts)`
+### `injectContentScript(targets, scripts)`
 
 It combines `executeScript` and `injectCSS` in a single call. You can pass the entire `content_script` object from the manifest too, without change (even with `snake_case_keys`). It accepts either an object or an array of objects.
+
+### targets
+
+This can be a tab ID, an array of tab IDs, a specific tab/frame combination, an array of such combinations:
+
+```js
+injectContentScript(1, scripts);
+injectContentScript([1, 2], scripts)
+injectContentScript({tabId: 1, frameId: 0}, scripts);
+injectContentScript([{tabId: 1, frameId: 0}, {tabId: 23, frameId: 98765}], scripts);
+```
+
+### Examples
 
 ```js
 const tabId = 42;
 await injectContentScript(tabId, {
 	runAt: 'document_idle',
-	allFrames: true,
+	allFrames: true, // Default when passing frame-less tab IDs
 	matchAboutBlank: true,
 	js: [
 		'contentscript.js'
