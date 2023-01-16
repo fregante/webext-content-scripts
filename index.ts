@@ -1,5 +1,6 @@
 import chromeP from 'webext-polyfill-kinda';
 import type {ExtensionTypes} from 'webextension-polyfill';
+import {patternToRegex} from 'webext-patterns';
 import type {ContentScript} from './types.js';
 
 const gotScripting = typeof chrome === 'object' && 'scripting' in chrome;
@@ -192,13 +193,17 @@ export async function executeScript(
 	}
 }
 
-export async function getTabsByUrl(patterns: string[]): Promise<number[]> {
-	if (patterns.length === 0) {
+export async function getTabsByUrl(matches: string[], excludeMatches?: string[]): Promise<number[]> {
+	if (matches.length === 0) {
 		return [];
 	}
 
-	const tabs = await chromeP.tabs.query({url: patterns});
-	return tabs.map(tab => tab.id).filter((id): id is number => typeof id === 'number');
+	const exclude = excludeMatches ? patternToRegex(...excludeMatches) : undefined;
+
+	const tabs = await chromeP.tabs.query({url: matches});
+	return tabs
+		.filter(tab => tab.id && tab.url && (exclude ? !exclude.test(tab.url) : true))
+		.map(tab => tab.id!);
 }
 
 export async function injectContentScript(

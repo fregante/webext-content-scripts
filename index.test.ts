@@ -41,4 +41,28 @@ describe('getTabsByUrl', () => {
 			'It should pass the query to chrome.tabs',
 		);
 	});
+
+	it('should handle the `excludeMatches` array', async () => {
+		const excludeMatches = ['http://*/*'];
+		assert.deepEqual(
+			await getTabsByUrl([], excludeMatches),
+			[],
+			'No patterns means no tabs',
+		);
+		assert.deepEqual(
+			await getTabsByUrl(['https://example.com/*'], excludeMatches),
+			[1],
+			'It should pass the query to chrome.tabs',
+		);
+		assert.deepEqual(
+			await getTabsByUrl(['*://*/*'], excludeMatches),
+			[1],
+			'It should exclude tabs with URLs matching `excludeMatches`',
+		);
+		assert.deepEqual(
+			await getTabsByUrl(['http://no-way.example.com/*'], excludeMatches),
+			[],
+			'It should exclude tabs with URLs matching `excludeMatches`, even if it’s the only match',
+		);
+	});
 });
