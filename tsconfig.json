@@ -1,11 +1,12 @@
 {
-	"extends": "@sindresorhus/tsconfig/tsconfig.json",
+	"extends": "@sindresorhus/tsconfig",
 	"compilerOptions": {
 		"outDir": "."
 	},
 	"files": [
 		"global.d.ts",
 		"types.d.ts",
+		"index.test.ts",
 		"index.ts"
 	]
 }

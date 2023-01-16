@@ -10,3 +10,5 @@ logs
 *.map
 index.js
 index.d.ts
+index.test.js
+index.test.d.ts
