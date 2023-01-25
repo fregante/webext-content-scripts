@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 import {chrome} from 'jest-chrome';
-import {describe, it, assert} from 'vitest';
-import {getTabsByUrl} from './index.js';
+import {describe, it, assert, expect} from 'vitest';
+import {executeFunction, getTabsByUrl} from './index.js';
 
 const tab1 = {
 	id: 1,
@@ -64,5 +64,11 @@ describe('getTabsByUrl', () => {
 			[],
 			'It should exclude tabs with URLs matching `excludeMatches`, even if it’s the only match',
 		);
+	});
+});
+
+describe('executeFunction', () => {
+	it('should throw with native functions', async () => {
+		await expect(executeFunction(1, Date)).rejects.toMatchInlineSnapshot('[TypeError: Native functions need to be wrapped first, like `executeFunction(1, () => alert(1))`]');
 	});
 });

@@ -49,11 +49,17 @@ function castArray<A = unknown>(possibleArray: A | A[]): A[] {
 
 type MaybeArray<X> = X | X[];
 
+const nativeFunction = /^function \w+\(\) {[\n\s]+\[native code][\n\s]+}/;
+
 export async function executeFunction<Fn extends (...args: any[]) => unknown>(
 	target: number | Target,
 	function_: Fn,
 	...args: unknown[]
 ): Promise<ReturnType<Fn>> {
+	if (nativeFunction.test(String(function_))) {
+		throw new TypeError('Native functions need to be wrapped first, like `executeFunction(1, () => alert(1))`');
+	}
+
 	const {frameId, tabId} = castTarget(target);
 
 	if (gotScripting) {
