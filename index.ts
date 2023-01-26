@@ -146,6 +146,16 @@ export async function insertCSS(
 	}
 }
 
+function assertNoCode(files: Array<{
+	code: string;
+} | {
+	file: string;
+}>): asserts files is Array<{file: string}> {
+	if (files.some(content => 'code' in content)) {
+		throw new Error('chrome.scripting does not support injecting strings of `code`');
+	}
+}
+
 export async function executeScript(
 	{
 		tabId,
@@ -159,42 +169,42 @@ export async function executeScript(
 	{ignoreTargetErrors}: InjectionOptions = {},
 ): Promise<void> {
 	let lastInjection: Promise<unknown> | undefined;
-	for (let content of files) {
-		if (typeof content === 'string') {
-			content = {file: content};
+	const normalizedFiles = files.map(file => typeof file === 'string' ? {file} : file);
+	if (gotScripting) {
+		assertNoCode(normalizedFiles);
+		const injection = chrome.scripting.executeScript({
+			target: {
+				tabId,
+				frameIds: arrayOrUndefined(frameId),
+				allFrames,
+			},
+			files: normalizedFiles.map(({file}) => file),
+		});
+
+		if (ignoreTargetErrors) {
+			void catchTargetInjectionErrors(injection);
 		}
 
-		if (gotScripting) {
-			if ('code' in content) {
-				throw new Error('chrome.scripting does not support injecting strings of `code`');
-			}
+		return;
+	}
 
-			lastInjection = chrome.scripting.executeScript({
-				target: {
-					tabId,
-					frameIds: arrayOrUndefined(frameId),
-					allFrames,
-				},
-				files: [content.file],
-			});
+	for (const content of normalizedFiles) {
+		// Files are executed in order, but code isn’t, so it must wait the last script #31
+		if ('code' in content) {
+			// eslint-disable-next-line no-await-in-loop -- On purpose, to serialize injection
+			await lastInjection;
+		}
 
-			if (ignoreTargetErrors) {
-				void catchTargetInjectionErrors(lastInjection);
-			}
-		} else {
-			// Files are executed in order, but code isn’t, so it must wait the last script #31
-			if ('code' in content) {
-				// eslint-disable-next-line no-await-in-loop -- On purpose, to serialize injection
-				await lastInjection;
-			}
+		lastInjection = chromeP.tabs.executeScript(tabId, {
+			...content,
+			matchAboutBlank,
+			allFrames,
+			frameId,
+			runAt,
+		});
 
-			lastInjection = chromeP.tabs.executeScript(tabId, {
-				...content,
-				matchAboutBlank,
-				allFrames,
-				frameId,
-				runAt,
-			});
+		if (ignoreTargetErrors) {
+			void catchTargetInjectionErrors(lastInjection);
 		}
 	}
 }
@@ -229,7 +239,7 @@ export async function injectContentScript(
 async function injectContentScriptInSpecificTarget(
 	{frameId, tabId, allFrames}: AllFramesTarget,
 	scripts: MaybeArray<ContentScript>,
-	{ignoreTargetErrors}: InjectionOptions = {},
+	options: InjectionOptions = {},
 ): Promise<void> {
 	const injections = castArray(scripts).flatMap(script => [
 		insertCSS({
@@ -239,7 +249,7 @@ async function injectContentScriptInSpecificTarget(
 			files: script.css ?? [],
 			matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
 			runAt: script.runAt ?? script.run_at,
-		}),
+		}, options),
 
 		executeScript({
 			tabId,
@@ -248,14 +258,10 @@ async function injectContentScriptInSpecificTarget(
 			files: script.js ?? [],
 			matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
 			runAt: script.runAt ?? script.run_at,
-		}),
+		}, options),
 	]);
 
-	if (ignoreTargetErrors) {
-		await catchTargetInjectionErrors(Promise.all(injections));
-	} else {
-		await Promise.all(injections);
-	}
+	await Promise.all(injections);
 }
 
 // Sourced from:
