@@ -3,7 +3,7 @@ import type {ExtensionTypes} from 'webextension-polyfill';
 import {patternToRegex} from 'webext-patterns';
 import type {ContentScript} from './types.js';
 
-const gotScripting = typeof chrome === 'object' && 'scripting' in chrome;
+const gotScripting = Boolean(globalThis.chrome?.scripting);
 
 interface AllFramesTarget {
 	tabId: number;
