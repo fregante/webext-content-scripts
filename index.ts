@@ -1,7 +1,6 @@
 import chromeP from 'webext-polyfill-kinda';
-import type {ExtensionTypes} from 'webextension-polyfill';
 import {patternToRegex} from 'webext-patterns';
-import type {ContentScript} from './types.js';
+import type {ContentScript, ExtensionFileOrCode, RunAt} from './types.js';
 
 const gotScripting = Boolean(globalThis.chrome?.scripting);
 
@@ -92,12 +91,8 @@ interface InjectionDetails {
 	frameId?: number;
 	matchAboutBlank?: boolean;
 	allFrames?: boolean;
-	runAt?: ExtensionTypes.RunAt;
-	files: string [] | Array<{
-		code: string;
-	} | {
-		file: string;
-	}>;
+	runAt?: RunAt;
+	files: string [] | ExtensionFileOrCode[];
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention -- It follows the native naming
