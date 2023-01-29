@@ -1,15 +1,21 @@
-import type {ExtensionTypes} from 'webextension-polyfill';
+export type ExtensionFileOrCode = {
+	code: string;
+} | {
+	file: string;
+};
+
+export type RunAt = 'document_start' | 'document_end' | 'document_idle';
 
 export interface ContentScript {
 	/**
 	 * The list of CSS files to inject
 	 */
-	css?: string[] | ExtensionTypes.ExtensionFileOrCode[];
+	css?: string[] | ExtensionFileOrCode[];
 
 	/**
 	 * The list of JS files to inject
 	 */
-	js?: string[] | ExtensionTypes.ExtensionFileOrCode[];
+	js?: string[] | ExtensionFileOrCode[];
 
 	/**
 	 * Prefer `allFrames`
@@ -36,10 +42,10 @@ export interface ContentScript {
 	/**
 	 * Prefer `runAt`
 	 */
-	run_at?: ExtensionTypes.RunAt;
+	run_at?: RunAt;
 
 	/**
 	 * The soonest that the JavaScript or CSS will be injected into the tab. Defaults to "document_idle".
 	 */
-	runAt?: ExtensionTypes.RunAt;
+	runAt?: RunAt;
 }
