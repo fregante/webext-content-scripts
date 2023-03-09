@@ -18,7 +18,7 @@ export interface ContentScript {
 	js?: string[] | ExtensionFileOrCode[];
 
 	/**
-	 * Prefer `allFrames`
+	 * @deprecated Prefer `allFrames`
 	 */
 	all_frames?: boolean;
 
@@ -29,7 +29,7 @@ export interface ContentScript {
 	allFrames?: boolean;
 
 	/**
-	 * Prefer `matchAboutBlank`
+	 * @deprecated Prefer `matchAboutBlank`
 	 */
 	match_about_blank?: boolean;
 
@@ -40,9 +40,9 @@ export interface ContentScript {
 	matchAboutBlank?: boolean;
 
 	/**
-	 * Prefer `runAt`
+	 * @deprecated Prefer `runAt`
 	 */
-	run_at?: RunAt;
+	run_at?: string;
 
 	/**
 	 * The soonest that the JavaScript or CSS will be injected into the tab. Defaults to "document_idle".

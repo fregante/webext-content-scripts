@@ -243,7 +243,7 @@ async function injectContentScriptInSpecificTarget(
 			allFrames,
 			files: script.css ?? [],
 			matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
-			runAt: script.runAt ?? script.run_at,
+			runAt: script.runAt ?? script.run_at as RunAt,
 		}, options),
 
 		executeScript({
@@ -252,7 +252,7 @@ async function injectContentScriptInSpecificTarget(
 			allFrames,
 			files: script.js ?? [],
 			matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
-			runAt: script.runAt ?? script.run_at,
+			runAt: script.runAt ?? script.run_at as RunAt,
 		}, options),
 	]);
 
