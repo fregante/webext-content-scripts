@@ -302,6 +302,7 @@ async function catchTargetInjectionErrors(promise: Promise<unknown>): Promise<vo
 		await promise;
 	} catch (error) {
 		// @ts-expect-error Optional chaining is good enough
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 		if (!targetErrors.test(error?.message)) {
 			throw error;
 		}
