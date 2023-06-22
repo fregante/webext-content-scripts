@@ -163,7 +163,6 @@ export async function executeScript(
 
 	{ignoreTargetErrors}: InjectionOptions = {},
 ): Promise<void> {
-	let lastInjection: Promise<unknown> | undefined;
 	const normalizedFiles = files.map(file => typeof file === 'string' ? {file} : file);
 	if (gotScripting) {
 		assertNoCode(normalizedFiles);
@@ -177,30 +176,37 @@ export async function executeScript(
 		});
 
 		if (ignoreTargetErrors) {
-			void catchTargetInjectionErrors(injection);
+			await catchTargetInjectionErrors(injection);
+		} else {
+			await injection;
 		}
 
+		// Don't return `injection`, the "return value" of a file is generally not useful
 		return;
 	}
 
+	// Don't use .map(), `code` injections can't be "parallel"
+	const executions: Array<Promise<unknown>> = [];
 	for (const content of normalizedFiles) {
-		// Files are executed in order, but code isn’t, so it must wait the last script #31
+		// Files are executed in order, but `code` isn’t, so it must await the last script before injecting more
 		if ('code' in content) {
-			// eslint-disable-next-line no-await-in-loop -- On purpose, to serialize injection
-			await lastInjection;
+			// eslint-disable-next-line no-await-in-loop -- On purpose, see above
+			await executions.at(-1);
 		}
 
-		lastInjection = chromeP.tabs.executeScript(tabId, {
+		executions.push(chromeP.tabs.executeScript(tabId, {
 			...content,
 			matchAboutBlank,
 			allFrames,
 			frameId,
 			runAt,
-		});
+		}));
+	}
 
-		if (ignoreTargetErrors) {
-			void catchTargetInjectionErrors(lastInjection);
-		}
+	if (ignoreTargetErrors) {
+		await catchTargetInjectionErrors(Promise.all(executions));
+	} else {
+		await Promise.all(executions);
 	}
 }
 
