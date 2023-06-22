@@ -83,7 +83,7 @@ export async function executeFunction<Fn extends (...args: any[]) => unknown>(
 }
 
 function arrayOrUndefined<X>(value?: X): [X] | undefined {
-	return typeof value === 'undefined' ? undefined : [value];
+	return value === undefined ? undefined : [value];
 }
 
 interface InjectionDetails {
@@ -181,7 +181,7 @@ export async function executeScript(
 			await injection;
 		}
 
-		// Don't return `injection`, the "return value" of a file is generally not useful
+		// Don't return `injection`; the "return value" of a file is generally not useful
 		return;
 	}
 
