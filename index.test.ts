@@ -20,6 +20,7 @@ const queryMap = new Map([
 
 // @ts-expect-error junk types
 chrome.tabs.query.mockImplementation((query, callback: (...args: any) => void) => {
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- Junk types
 	callback(queryMap.get(query.url[0]) ?? []);
 });
 
