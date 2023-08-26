@@ -118,7 +118,7 @@ export async function insertCSS(
 				target: {
 					tabId,
 					frameIds: arrayOrUndefined(frameId),
-					allFrames,
+					allFrames: frameId === undefined ? allFrames : undefined,
 				},
 				files: 'file' in content ? [content.file] : undefined,
 				css: 'code' in content ? content.code : undefined,
@@ -170,7 +170,7 @@ export async function executeScript(
 			target: {
 				tabId,
 				frameIds: arrayOrUndefined(frameId),
-				allFrames,
+				allFrames: frameId === undefined ? allFrames : undefined,
 			},
 			files: normalizedFiles.map(({file}) => file),
 		});
