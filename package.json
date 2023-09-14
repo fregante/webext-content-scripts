@@ -48,13 +48,13 @@
 		"webext-polyfill-kinda": "^1.0.2"
 	},
 	"devDependencies": {
-		"@sindresorhus/tsconfig": "^3.0.1",
-		"@types/chrome": "^0.0.241",
-		"@types/jest": "^29.5.3",
+		"@sindresorhus/tsconfig": "^4.0.0",
+		"@types/chrome": "^0.0.246",
+		"@types/jest": "^29.5.4",
 		"jest-chrome": "^0.8.0",
-		"typescript": "^5.1.6",
-		"vitest": "^0.33.0",
-		"xo": "^0.54.2"
+		"typescript": "^5.2.2",
+		"vitest": "^0.34.4",
+		"xo": "^0.56.0"
 	},
 	"engines": {
 		"node": ">=16"
