@@ -49,7 +49,7 @@
 	},
 	"devDependencies": {
 		"@sindresorhus/tsconfig": "^5.0.0",
-		"@types/chrome": "^0.0.248",
+		"@types/chrome": "^0.0.251",
 		"@types/jest": "^29.5.4",
 		"jest-chrome": "^0.8.0",
 		"typescript": "^5.2.2",
