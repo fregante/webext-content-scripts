@@ -287,8 +287,8 @@ const blockedPrefixes = [
 	'testpilot.firefox.com',
 ];
 
-export function isScriptableUrl(url: string): boolean {
-	if (!url.startsWith('http')) {
+export function isScriptableUrl(url: string | undefined): boolean {
+	if (!url?.startsWith('http')) {
 		return false;
 	}
 
