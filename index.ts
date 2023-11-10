@@ -270,6 +270,7 @@ async function injectContentScriptInSpecificTarget(
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Content_scripts
 const blockedPrefixes = [
 	'chrome.google.com/webstore', // Host *and* pathname
+	'chromewebstore.google.com',
 	'accounts-static.cdn.mozilla.net',
 	'accounts.firefox.com',
 	'addons.cdn.mozilla.net',
