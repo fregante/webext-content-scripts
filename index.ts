@@ -76,6 +76,7 @@ export async function executeFunction<Fn extends (...args: any[]) => unknown>(
 
 	const [result] = await chromeP.tabs.executeScript(tabId, {
 		code: `(${function_.toString()})(...${JSON.stringify(args)})`,
+		matchAboutBlank: true, // Needed for `srcdoc` frames; doesn't hurt normal pages
 		frameId,
 	}) as [ReturnType<Fn>];
 
