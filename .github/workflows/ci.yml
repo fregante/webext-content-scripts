@@ -2,12 +2,13 @@ env: {}
 
 # FILE GENERATED WITH: npx ghat fregante/ghatemplates/node
 # SOURCE: https://github.com/fregante/ghatemplates
-# OPTIONS: {"exclude":["jobs.Test"]}
 
 name: CI
+
 on:
   - pull_request
   - push
+
 jobs:
   Lint:
     runs-on: ubuntu-latest
@@ -16,10 +17,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: package.json
-      - name: install
-        run: npm ci || npm install
+      - run: npm install
       - name: XO
         run: npx xo
+
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+      - run: npm install
+      - name: Vitest
+        run: npx vitest
+
   Build:
     runs-on: ubuntu-latest
     steps:
@@ -27,7 +39,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: package.json
-      - name: install
-        run: npm ci || npm install
+      - run: npm install
       - name: build
         run: npm run build
