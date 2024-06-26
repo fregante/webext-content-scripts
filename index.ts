@@ -310,3 +310,12 @@ async function catchTargetInjectionErrors(promise: Promise<unknown>): Promise<vo
 		}
 	}
 }
+
+export async function canAccessTab(
+	target: number | Target,
+): Promise<boolean> {
+	return executeFunction(castTarget(target), () => true).then(
+		() => true,
+		() => false,
+	);
+}
