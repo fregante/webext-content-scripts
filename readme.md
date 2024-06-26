@@ -24,6 +24,7 @@ import {
 	insertCSS,
 	injectContentScript,
 	executeFunction,
+	canAccessTab,
 } from 'webext-content-scripts';
 ```
 
@@ -186,6 +187,36 @@ await executeFunction(tabId, (localCatsAndDogs) => {
 }, catsAndDogs); // Argument
 ```
 
+### `canAccessTab(tabId)`
+
+### `canAccessTab({tabId, frameId})`
+
+Checks whether the extension has access to a specific tab or frame (i.e. content scripts are allowed to run), either via `activeTab` permission or regular host permissions.
+
+```js
+const tabId = 42;
+const access = await canAccessTab(tabId);
+if (access) {
+	console.log('We can access this tab');
+	chrome.tabs.executeScript(tabId, {file: 'my-script.js'});
+} else {
+	console.warn('We have no access to the tab');
+}
+```
+
+```js
+const access = await canAccessTab({
+	tabId: 42,
+	frameId: 56,
+});
+if (access) {
+	console.log('We can access this frame');
+	chrome.tabs.executeScript(42, {file: 'my-script.js', frameId: 56});
+} else {
+	console.warn('We have no access to the frame');
+}
+```
+
 ### `isScriptableUrl(url)`
 
 Browsers block access to some URLs for security reasons. This function will check whether a passed URL is blocked. Permissions and the manifest are not checked, this function is completely static. It will also returns `false` for any URL that doesn't start with `http`.
@@ -208,7 +239,7 @@ if (isScriptableUrl(url)) {
 
 - [webext-tools](https://github.com/fregante/webext-tools) - Utility functions for Web Extensions.
 - [webext-domain-permission-toggle](https://github.com/fregante/webext-domain-permission-toggle) - Browser-action context menu to request permission for the current tab.
-- [webext-additional-permissions](https://github.com/fregante/webext-additional-permissions) - Get any optional permissions that users have granted you.
+- [webext-permissions](https://github.com/fregante/webext-permissions) - Get any optional permissions that users have granted you.
 - [webext-dynamic-content-scripts](https://github.com/fregante/webext-dynamic-content-scripts) - Automatically registers your content_scripts on domains added via permission.request
 - [More…](https://github.com/fregante/webext-fun)
 
