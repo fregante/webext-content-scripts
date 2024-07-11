@@ -238,7 +238,7 @@ if (isScriptableUrl(url)) {
 ## Related
 
 - [webext-tools](https://github.com/fregante/webext-tools) - Utility functions for Web Extensions.
-- [webext-domain-permission-toggle](https://github.com/fregante/webext-domain-permission-toggle) - Browser-action context menu to request permission for the current tab.
+- [webext-permission-toggle](https://github.com/fregante/webext-permission-toggle) - Browser-action context menu to request permission for the current tab.
 - [webext-permissions](https://github.com/fregante/webext-permissions) - Get any optional permissions that users have granted you.
 - [webext-dynamic-content-scripts](https://github.com/fregante/webext-dynamic-content-scripts) - Automatically registers your content_scripts on domains added via permission.request
 - [More…](https://github.com/fregante/webext-fun)
