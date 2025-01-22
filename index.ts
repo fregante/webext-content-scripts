@@ -48,6 +48,25 @@ function castArray<A = unknown>(possibleArray: A | A[]): A[] {
 	return [possibleArray];
 }
 
+function normalizeFiles(files: InjectionDetails['files'], seen: string[] = []): ExtensionFileOrCode[] {
+	return files
+		.map(file => typeof file === 'string' ? {file} : file)
+		.filter(content => {
+			if ('code' in content) {
+				return true;
+			}
+
+			const file = typeof content === 'string' ? content : content.file;
+			if (seen.includes(file)) {
+				console.debug(`Duplicated file not injected: ${file}`);
+				return false;
+			}
+
+			seen.push(file);
+			return true;
+		});
+}
+
 type MaybeArray<X> = X | X[];
 
 const nativeFunction = /^function \w+\(\) {[\n\s]+\[native code][\n\s]+}/;
@@ -95,7 +114,7 @@ interface InjectionDetails {
 	matchAboutBlank?: boolean;
 	allFrames?: boolean;
 	runAt?: RunAt;
-	files: string [] | ExtensionFileOrCode[];
+	files: string[] | ExtensionFileOrCode[];
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention -- It follows the native naming
@@ -111,12 +130,10 @@ export async function insertCSS(
 
 	{ignoreTargetErrors}: InjectionOptions = {},
 ): Promise<void> {
-	const everyInsertion = Promise.all(files.map(async content => {
-		if (typeof content === 'string') {
-			content = {file: content};
-		}
-
+	const normalizedFiles = normalizeFiles(files);
+	const everyInsertion = Promise.all(normalizedFiles.map(async content => {
 		if (gotScripting) {
+			// One file at a time, according to the types
 			return chrome.scripting.insertCSS({
 				target: {
 					tabId,
@@ -166,7 +183,7 @@ export async function executeScript(
 
 	{ignoreTargetErrors}: InjectionOptions = {},
 ): Promise<void> {
-	const normalizedFiles = files.map(file => typeof file === 'string' ? {file} : file);
+	const normalizedFiles = normalizeFiles(files);
 	if (gotScripting) {
 		assertNoCode(normalizedFiles);
 		const injection = chrome.scripting.executeScript({
@@ -245,25 +262,30 @@ async function injectContentScriptInSpecificTarget(
 	scripts: MaybeArray<ContentScript>,
 	options: InjectionOptions = {},
 ): Promise<void> {
-	const injections = castArray(scripts).flatMap(script => [
-		insertCSS({
-			tabId,
-			frameId,
-			allFrames,
-			files: script.css ?? [],
-			matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
-			runAt: script.runAt ?? script.run_at as RunAt,
-		}, options),
+	const seen: string[] = [];
+	const injections = castArray(scripts).flatMap(script => {
+		const css = normalizeFiles(script.css ?? [], seen);
+		const js = normalizeFiles(script.js ?? [], seen);
+		return [
+			css.length > 0 && insertCSS({
+				tabId,
+				frameId,
+				allFrames,
+				files: css,
+				matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
+				runAt: script.runAt ?? script.run_at as RunAt,
+			}, options),
 
-		executeScript({
-			tabId,
-			frameId,
-			allFrames,
-			files: script.js ?? [],
-			matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
-			runAt: script.runAt ?? script.run_at as RunAt,
-		}, options),
-	]);
+			js.length > 0 && executeScript({
+				tabId,
+				frameId,
+				allFrames,
+				files: js,
+				matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
+				runAt: script.runAt ?? script.run_at as RunAt,
+			}, options),
+		];
+	});
 
 	await Promise.all(injections);
 }
