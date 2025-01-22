@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 import {chrome} from 'jest-chrome';
-import {describe, it, assert, expect} from 'vitest';
+import {
+	describe, it, assert, expect,
+} from 'vitest';
 import {executeFunction, getTabsByUrl} from './index.js';
 
 const tab1 = {
@@ -19,7 +21,7 @@ const queryMap = new Map([
 ]);
 
 // @ts-expect-error junk types
-chrome.tabs.query.mockImplementation((query, callback: (...args: any) => void) => {
+chrome.tabs.query.mockImplementation((query, callback: (...arguments_: any) => void) => {
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- Junk types
 	callback(queryMap.get(query.url[0]) ?? []);
 });

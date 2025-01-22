@@ -71,11 +71,11 @@ type MaybeArray<X> = X | X[];
 
 const nativeFunction = /^function \w+\(\) {[\n\s]+\[native code][\n\s]+}/;
 
-export async function executeFunction<Fn extends (...args: any[]) => unknown>(
+export async function executeFunction<FunctionToSerialize extends (...arguments_: any[]) => unknown>(
 	target: number | Target,
-	function_: Fn,
-	...args: unknown[]
-): Promise<ReturnType<Fn>> {
+	function_: FunctionToSerialize,
+	...arguments_: unknown[]
+): Promise<ReturnType<FunctionToSerialize>> {
 	if (nativeFunction.test(String(function_))) {
 		throw new TypeError('Native functions need to be wrapped first, like `executeFunction(1, () => alert(1))`');
 	}
@@ -89,17 +89,17 @@ export async function executeFunction<Fn extends (...args: any[]) => unknown>(
 				frameIds: [frameId],
 			},
 			func: function_,
-			args,
+			args: arguments_,
 		});
 
-		return injection?.result as ReturnType<Fn>;
+		return injection?.result as ReturnType<FunctionToSerialize>;
 	}
 
 	const [result] = await chromeP.tabs.executeScript(tabId, {
-		code: `(${function_.toString()})(...${JSON.stringify(args)})`,
+		code: `(${function_.toString()})(...${JSON.stringify(arguments_)})`,
 		matchAboutBlank: true, // Needed for `srcdoc` frames; doesn't hurt normal pages
 		frameId,
-	}) as [ReturnType<Fn>];
+	}) as [ReturnType<FunctionToSerialize>];
 
 	return result;
 }
@@ -210,7 +210,7 @@ export async function executeScript(
 	for (const content of normalizedFiles) {
 		// Files are executed in order, but `code` isn’t, so it must await the last script before injecting more
 		if ('code' in content) {
-			// eslint-disable-next-line no-await-in-loop -- On purpose, see above
+			// eslint-disable-next-line no-await-in-loop, n/no-unsupported-features/es-syntax -- On purpose, see above
 			await executions.at(-1);
 		}
 
@@ -338,8 +338,10 @@ async function catchTargetInjectionErrors(promise: Promise<unknown>): Promise<vo
 export async function canAccessTab(
 	target: number | Target,
 ): Promise<boolean> {
-	return executeFunction(castTarget(target), () => true).then(
-		() => true,
-		() => false,
-	);
+	try {
+		await executeFunction(castTarget(target), () => true);
+		return true;
+	} catch {
+		return false;
+	}
 }

@@ -47,17 +47,17 @@
 		}
 	},
 	"dependencies": {
-		"webext-patterns": "^1.3.0",
+		"webext-patterns": "^1.5.0",
 		"webext-polyfill-kinda": "^1.0.2"
 	},
 	"devDependencies": {
-		"@sindresorhus/tsconfig": "^5.0.0",
-		"@types/chrome": "^0.0.251",
-		"@types/jest": "^29.5.8",
+		"@sindresorhus/tsconfig": "^7.0.0",
+		"@types/chrome": "^0.0.299",
+		"@types/jest": "^29.5.14",
 		"jest-chrome": "^0.8.0",
-		"typescript": "^5.2.2",
-		"vitest": "^0.34.6",
-		"xo": "^0.56.0"
+		"typescript": "^5.7.3",
+		"vitest": "^3.0.3",
+		"xo": "^0.60.0"
 	},
 	"engines": {
 		"node": ">=16"
