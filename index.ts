@@ -294,11 +294,14 @@ async function injectContentScriptInSpecificTarget(
 }
 
 // Sourced from:
-// https://source.chromium.org/chromium/chromium/src/+/main:extensions/common/extension_urls.cc;drc=6b42116fe3b3d93a77750bdcc07948e98a728405;l=29
+// https://source.chromium.org/chromium/chromium/src/+/main:extensions/common/extension_urls.cc
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Content_scripts
 const blockedPrefixes = [
 	'chrome.google.com/webstore', // Host *and* pathname
 	'chromewebstore.google.com',
+	'sb-ssl.google.com',
+	'safebrowsing.googleapis.com',
+	'safebrowsing.google.com/safebrowsing', // Host *and* pathname
 	'accounts-static.cdn.mozilla.net',
 	'accounts.firefox.com',
 	'addons.cdn.mozilla.net',

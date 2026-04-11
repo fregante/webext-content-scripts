@@ -3,7 +3,7 @@ import {chrome} from 'jest-chrome';
 import {
 	describe, it, assert, expect,
 } from 'vitest';
-import {executeFunction, getTabsByUrl} from './index.js';
+import {executeFunction, getTabsByUrl, isScriptableUrl} from './index.js';
 
 const tab1 = {
 	id: 1,
@@ -73,5 +73,42 @@ describe('getTabsByUrl', () => {
 describe('executeFunction', () => {
 	it('should throw with native functions', async () => {
 		await expect(executeFunction(1, Date)).rejects.toMatchInlineSnapshot('[TypeError: Native functions need to be wrapped first, like `executeFunction(1, () => alert(1))`]');
+	});
+});
+
+describe('isScriptableUrl', () => {
+	it('should return true for regular http/https URLs', () => {
+		assert.equal(isScriptableUrl('https://example.com/'), true);
+		assert.equal(isScriptableUrl('http://example.com/'), true);
+	});
+
+	it('should return false for non-http URLs', () => {
+		assert.equal(isScriptableUrl(undefined), false);
+		assert.equal(isScriptableUrl('chrome://settings'), false);
+		assert.equal(isScriptableUrl('about:blank'), false);
+		assert.equal(isScriptableUrl('file:///etc/hosts'), false);
+	});
+
+	it('should return false for Chrome Web Store URLs', () => {
+		assert.equal(isScriptableUrl('https://chrome.google.com/webstore'), false);
+		assert.equal(isScriptableUrl('https://chrome.google.com/webstore/detail/foo'), false);
+		assert.equal(isScriptableUrl('https://chromewebstore.google.com/'), false);
+		assert.equal(isScriptableUrl('https://chromewebstore.google.com/detail/foo'), false);
+	});
+
+	it('should return false for Chrome Safe Browsing URLs', () => {
+		assert.equal(isScriptableUrl('https://sb-ssl.google.com/safebrowsing/clientreport/download'), false);
+		assert.equal(isScriptableUrl('https://safebrowsing.googleapis.com/v4/threatMatches:find'), false);
+		assert.equal(isScriptableUrl('https://safebrowsing.google.com/safebrowsing/ping'), false);
+	});
+
+	it('should return true for safe-browsing-adjacent URLs that are not restricted', () => {
+		assert.equal(isScriptableUrl('https://safebrowsing.google.com/'), true);
+		assert.equal(isScriptableUrl('https://safebrowsing.google.com/other-path'), true);
+	});
+
+	it('should return false for Firefox restricted URLs', () => {
+		assert.equal(isScriptableUrl('https://addons.mozilla.org/en-US/firefox/'), false);
+		assert.equal(isScriptableUrl('https://accounts.firefox.com/'), false);
 	});
 });
