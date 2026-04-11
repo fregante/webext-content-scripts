@@ -230,6 +230,9 @@ export async function executeScript(
 	}
 }
 
+/**
+ * @deprecated Use `queryTabsByUrl` from https://github.com/fregante/webext-tools/blob/main/source/query-tabs-by-url.md instead.
+ */
 export async function getTabsByUrl(matches: string[], excludeMatches?: string[]): Promise<number[]> {
 	if (matches.length === 0) {
 		return [];
