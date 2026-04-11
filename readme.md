@@ -153,6 +153,8 @@ await injectContentScript(tabId, scripts);
 
 ### `executeFunction({tabId, frameId}, function, ...arguments)`
 
+### `executeFunction({tabId, frameId, injectImmediately}, function, ...arguments)`
+
 Like `chrome.tabs.executeScript`, except that it accepts a raw function to be executed in the chosen tab.
 
 ```js

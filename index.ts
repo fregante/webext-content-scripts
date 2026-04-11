@@ -72,7 +72,7 @@ type MaybeArray<X> = X | X[];
 const nativeFunction = /^function \w+\(\) {[\n\s]+\[native code][\n\s]+}/;
 
 export async function executeFunction<FunctionToSerialize extends (...arguments_: any[]) => unknown>(
-	target: number | Target,
+	target: number | (Target & {injectImmediately?: boolean}),
 	function_: FunctionToSerialize,
 	...arguments_: unknown[]
 ): Promise<ReturnType<FunctionToSerialize>> {
@@ -81,6 +81,7 @@ export async function executeFunction<FunctionToSerialize extends (...arguments_
 	}
 
 	const {frameId, tabId} = castTarget(target);
+	const injectImmediately = typeof target === 'object' ? target.injectImmediately : undefined;
 
 	if (gotScripting) {
 		const [injection] = await chrome.scripting.executeScript({
@@ -90,6 +91,7 @@ export async function executeFunction<FunctionToSerialize extends (...arguments_
 			},
 			func: function_,
 			args: arguments_,
+			injectImmediately,
 		});
 
 		return injection?.result as ReturnType<FunctionToSerialize>;
