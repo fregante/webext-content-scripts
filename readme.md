@@ -96,8 +96,9 @@ injectContentScript([1, 2], scripts)
 injectContentScript({tabId: 1, frameId: 0}, scripts);
 injectContentScript([{tabId: 1, frameId: 0}, {tabId: 23, frameId: 98765}], scripts);
 
-// You can also use the exported `getTabsByUrl` utility to inject by URL as well
-injectContentScript(await getTabsByUrl(['https://example.com/*']), scripts);
+// You can also use `webext-tools` to inject by URL as well
+import queryTabsByUrl from 'webext-tools/query-tabs-by-url.js';
+injectContentScript(await queryTabsByUrl(['https://example.com/*']), scripts);
 ```
 
 ### Examples

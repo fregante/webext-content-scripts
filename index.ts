@@ -230,6 +230,9 @@ export async function executeScript(
 	}
 }
 
+/**
+ * @deprecated Use `webext-tools` instead: import queryTabsByUrl from 'webext-tools/query-tabs-by-url.js';
+ */
 export async function getTabsByUrl(matches: string[], excludeMatches?: string[]): Promise<number[]> {
 	if (matches.length === 0) {
 		return [];
