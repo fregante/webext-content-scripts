@@ -97,6 +97,13 @@ injectContentScript({tabId: 1, frameId: 0}, scripts);
 injectContentScript([{tabId: 1, frameId: 0}, {tabId: 23, frameId: 98765}], scripts);
 ```
 
+You can also use [`queryTabsByUrl`](https://github.com/fregante/webext-tools/blob/main/source/query-tabs-by-url.md) from `webext-tools` to inject by URL:
+
+```js
+import queryTabsByUrl from 'webext-tools/query-tabs-by-url.js';
+injectContentScript(await queryTabsByUrl(['https://example.com/*']), scripts);
+```
+
 ### Examples
 
 ```js
