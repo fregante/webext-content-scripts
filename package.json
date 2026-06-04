@@ -32,7 +32,7 @@
 	"scripts": {
 		"build": "tsc",
 		"prepare": "tsc --sourceMap false",
-		"test": "xo && tsc --noEmit",
+		"test": "xo && vitest && tsc --noEmit",
 		"watch": "tsc --watch"
 	},
 	"xo": {
