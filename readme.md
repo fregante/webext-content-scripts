@@ -25,6 +25,7 @@ import {
 	injectContentScript,
 	executeFunction,
 	canAccessTab,
+	assertTabAccess,
 } from 'webext-content-scripts';
 ```
 
@@ -216,6 +217,20 @@ if (access) {
 } else {
 	console.warn('We have no access to the frame');
 }
+```
+
+### `assertTabAccess(tabId)`
+
+### `assertTabAccess({tabId, frameId})`
+
+Like `canAccessTab`, but instead of returning `false` on failure it throws whatever error the browser throws. 
+
+Note that you don't need to verify access before calling `executeScript`, just call `executeScript` directly and it will throw exactly the same way.
+
+```js
+const tabId = 42;
+await assertTabAccess(tabId); // throws if the extension has no access
+chrome.tabs.repload(tabId);
 ```
 
 ### `isScriptableUrl(url)`
