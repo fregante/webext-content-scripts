@@ -348,3 +348,9 @@ export async function canAccessTab(
 		return false;
 	}
 }
+
+export async function assertTabAccess(
+	target: number | Target,
+): Promise<void> {
+	await executeFunction(castTarget(target), () => true);
+}

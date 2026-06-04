@@ -3,7 +3,7 @@ import {chrome} from 'jest-chrome';
 import {
 	describe, it, assert, expect,
 } from 'vitest';
-import {executeFunction, getTabsByUrl} from './index.js';
+import {executeFunction, getTabsByUrl, assertTabAccess} from './index.js';
 
 const tab1 = {
 	id: 1,
@@ -73,5 +73,11 @@ describe('getTabsByUrl', () => {
 describe('executeFunction', () => {
 	it('should throw with native functions', async () => {
 		await expect(executeFunction(1, Date)).rejects.toMatchInlineSnapshot('[TypeError: Native functions need to be wrapped first, like `executeFunction(1, () => alert(1))`]');
+	});
+});
+
+describe('assertTabAccess', () => {
+	it('should throw with native functions', async () => {
+		await expect(assertTabAccess(1)).rejects.toMatchInlineSnapshot('[TypeError: Native functions need to be wrapped first, like `executeFunction(1, () => alert(1))`]');
 	});
 });
