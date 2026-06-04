@@ -342,7 +342,7 @@ export async function canAccessTab(
 	target: number | Target,
 ): Promise<boolean> {
 	try {
-		await executeFunction(castTarget(target), () => true);
+		await assertTabAccess(target);
 		return true;
 	} catch {
 		return false;
