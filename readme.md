@@ -223,12 +223,14 @@ if (access) {
 
 ### `assertTabAccess({tabId, frameId})`
 
-Like `canAccessTab`, but instead of returning `false` on failure it throws whatever error the browser throws.
+Like `canAccessTab`, but instead of returning `false` on failure it throws whatever error the browser throws. 
+
+Note that you don't need to verify access before calling `executeScript`, just call `executeScript` directly and it will throw exactly the same way.
 
 ```js
 const tabId = 42;
 await assertTabAccess(tabId); // throws if the extension has no access
-chrome.tabs.executeScript(tabId, {file: 'my-script.js'});
+chrome.tabs.repload(tabId);
 ```
 
 ### `isScriptableUrl(url)`
