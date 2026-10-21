@@ -4,7 +4,7 @@ import type {ContentScript, ExtensionFileOrCode, RunAt} from './types.js';
 
 export type * from './types.js';
 
-const gotScripting = Boolean(globalThis.chrome?.scripting);
+const isGotScripting = Boolean(globalThis.chrome?.scripting);
 
 interface AllFramesTarget {
 	tabId: number;
@@ -22,10 +22,12 @@ interface InjectionOptions {
 }
 
 function castTarget(target: number | Target): Target {
-	return typeof target === 'object' ? target : {
-		tabId: target,
-		frameId: 0,
-	};
+	return typeof target === 'object'
+		? target
+		: {
+			tabId: target,
+			frameId: 0,
+		};
 }
 
 function castAllFramesTarget(target: number | Target): AllFramesTarget {
@@ -69,7 +71,7 @@ function normalizeFiles(files: InjectionDetails['files'], seen: string[] = []): 
 
 type MaybeArray<X> = X | X[];
 
-const nativeFunction = /^function \w+\(\) {[\n\s]+\[native code][\n\s]+}/;
+const nativeFunction = /^function \w+\(\) \{[\s]+\[native code\][\s]+\}/v;
 
 export async function executeFunction<FunctionToSerialize extends (...arguments_: any[]) => unknown>(
 	target: number | Target,
@@ -82,7 +84,7 @@ export async function executeFunction<FunctionToSerialize extends (...arguments_
 
 	const {frameId, tabId} = castTarget(target);
 
-	if (gotScripting) {
+	if (isGotScripting) {
 		const [injection] = await chrome.scripting.executeScript({
 			target: {
 				tabId,
@@ -104,8 +106,14 @@ export async function executeFunction<FunctionToSerialize extends (...arguments_
 	return result;
 }
 
-function arrayOrUndefined<X>(value?: X): [X] | undefined {
-	return value === undefined ? undefined : [value];
+function getInjectionTarget(tabId: number, frameId?: number, isAllFrames?: boolean): chrome.scripting.InjectionTarget {
+	if (frameId !== undefined) {
+		return {tabId, frameIds: [frameId]};
+	}
+
+	return isAllFrames === true
+		? {tabId, allFrames: true}
+		: {tabId};
 }
 
 interface InjectionDetails {
@@ -132,16 +140,13 @@ export async function insertCSS(
 ): Promise<void> {
 	const normalizedFiles = normalizeFiles(files);
 	const everyInsertion = Promise.all(normalizedFiles.map(async content => {
-		if (gotScripting) {
+		if (isGotScripting) {
 			// One file at a time, according to the types
 			return chrome.scripting.insertCSS({
-				target: {
-					tabId,
-					frameIds: arrayOrUndefined(frameId),
-					allFrames: frameId === undefined ? allFrames : undefined,
-				},
-				files: 'file' in content ? [content.file] : undefined,
-				css: 'code' in content ? content.code : undefined,
+				target: getInjectionTarget(tabId, frameId, allFrames),
+				...('file' in content
+					? {files: [content.file]}
+					: {css: content.code}),
 			});
 		}
 
@@ -184,14 +189,10 @@ export async function executeScript(
 	{ignoreTargetErrors}: InjectionOptions = {},
 ): Promise<void> {
 	const normalizedFiles = normalizeFiles(files);
-	if (gotScripting) {
+	if (isGotScripting) {
 		assertNoCode(normalizedFiles);
 		const injection = chrome.scripting.executeScript({
-			target: {
-				tabId,
-				frameIds: arrayOrUndefined(frameId),
-				allFrames: frameId === undefined ? allFrames : undefined,
-			},
+			target: getInjectionTarget(tabId, frameId, allFrames),
 			files: normalizedFiles.map(({file}) => file),
 		});
 
@@ -210,7 +211,7 @@ export async function executeScript(
 	for (const content of normalizedFiles) {
 		// Files are executed in order, but `code` isn’t, so it must await the last script before injecting more
 		if ('code' in content) {
-			// eslint-disable-next-line no-await-in-loop, n/no-unsupported-features/es-syntax -- On purpose, see above
+			// eslint-disable-next-line no-await-in-loop, unicorn/no-unused-builtin-method-return -- On purpose, see above
 			await executions.at(-1);
 		}
 
@@ -231,7 +232,9 @@ export async function executeScript(
 }
 
 /**
- * @deprecated Use `webext-tools` instead: import queryTabsByUrl from 'webext-tools/query-tabs-by-url.js';
+ Get the IDs of the tabs matching the patterns.
+
+ @deprecated Use `webext-tools` instead: import queryTabsByUrl from 'webext-tools/query-tabs-by-url.js';
  */
 export async function getTabsByUrl(matches: string[], excludeMatches?: string[]): Promise<number[]> {
 	if (matches.length === 0) {
@@ -242,7 +245,7 @@ export async function getTabsByUrl(matches: string[], excludeMatches?: string[])
 
 	const tabs = await chromeP.tabs.query({url: matches});
 	return tabs
-		.filter(tab => tab.id && tab.url && (exclude ? !exclude.test(tab.url) : true))
+		.filter(tab => tab.id !== undefined && tab.url !== undefined && (!exclude?.test(tab.url)))
 		.map(tab => tab.id!);
 }
 
@@ -270,23 +273,30 @@ async function injectContentScriptInSpecificTarget(
 		const css = normalizeFiles(script.css ?? [], seen);
 		const js = normalizeFiles(script.js ?? [], seen);
 		return [
-			css.length > 0 && insertCSS({
-				tabId,
-				frameId,
-				allFrames,
-				files: css,
-				matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
-				runAt: script.runAt ?? script.run_at as RunAt,
-			}, options),
-
-			js.length > 0 && executeScript({
-				tabId,
-				frameId,
-				allFrames,
-				files: js,
-				matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
-				runAt: script.runAt ?? script.run_at as RunAt,
-			}, options),
+			...(css.length > 0
+				? [insertCSS({
+					tabId,
+					frameId,
+					allFrames,
+					files: css,
+					// eslint-disable-next-line @typescript-eslint/no-deprecated -- Supported for backwards compatibility
+					matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
+					// eslint-disable-next-line @typescript-eslint/no-deprecated -- Supported for backwards compatibility
+					runAt: script.runAt ?? script.run_at as RunAt,
+				}, options)]
+				: []),
+			...(js.length > 0
+				? [executeScript({
+					tabId,
+					frameId,
+					allFrames,
+					files: js,
+					// eslint-disable-next-line @typescript-eslint/no-deprecated -- Supported for backwards compatibility
+					matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
+					// eslint-disable-next-line @typescript-eslint/no-deprecated -- Supported for backwards compatibility
+					runAt: script.runAt ?? script.run_at as RunAt,
+				}, options)]
+				: []),
 		];
 	});
 
@@ -320,11 +330,11 @@ export function isScriptableUrl(url: string | undefined): boolean {
 		return false;
 	}
 
-	const cleanUrl = url.replace(/^https?:\/\//, '');
+	const cleanUrl = url.replace(/^https?:\/\//v, '');
 	return blockedPrefixes.every(blocked => !cleanUrl.startsWith(blocked));
 }
 
-const targetErrors = /^No frame with id \d+ in tab \d+.$|^No tab with id: \d+.$|^The tab was closed.$|^The frame was removed.$/;
+const targetErrors = /^No frame with id \d+ in tab \d+.$|^No tab with id: \d+.$|^The tab was closed.$|^The frame was removed.$/v;
 
 async function catchTargetInjectionErrors(promise: Promise<unknown>): Promise<void> {
 	try {

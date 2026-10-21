@@ -1,7 +1,10 @@
-/* eslint-disable @typescript-eslint/consistent-type-assertions */
+/* eslint-disable @typescript-eslint/consistent-type-assertions -- Test mocks need assertions */
 import {chrome} from 'jest-chrome';
 import {
-	describe, it, assert, expect,
+	describe,
+	it,
+	assert,
+	expect,
 } from 'vitest';
 import {executeFunction, getTabsByUrl, assertTabAccess} from './index.js';
 
@@ -20,10 +23,8 @@ const queryMap = new Map([
 	['*://*/*', [tab1, tab2]],
 ]);
 
-// @ts-expect-error junk types
 chrome.tabs.query.mockImplementation((query, callback: (...arguments_: any) => void) => {
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- Junk types
-	callback(queryMap.get(query.url[0]) ?? []);
+	callback(queryMap.get((query.url as string[])[0]!) ?? []);
 });
 
 describe('getTabsByUrl', () => {
