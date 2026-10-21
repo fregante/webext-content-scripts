@@ -1,7 +1,8 @@
 {
 	"extends": "@sindresorhus/tsconfig",
 	"compilerOptions": {
-		"outDir": "."
+		"outDir": ".",
+		"types": ["chrome", "jest"]
 	},
 	"files": [
 		"types.d.ts",

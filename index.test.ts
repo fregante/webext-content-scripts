@@ -1,7 +1,10 @@
-/* eslint-disable @typescript-eslint/consistent-type-assertions */
+/* eslint-disable @typescript-eslint/consistent-type-assertions -- Test mocks need assertions */
 import {chrome} from 'jest-chrome';
 import {
-	describe, it, assert, expect,
+	describe,
+	it,
+	assert,
+	expect,
 } from 'vitest';
 import {executeFunction, getTabsByUrl, assertTabAccess} from './index.js';
 
@@ -11,19 +14,17 @@ const tab1 = {
 } as chrome.tabs.Tab;
 const tab2 = {
 	id: 2,
-	url: 'http://no-way.example.com/other/index.html',
+	url: 'https://no-way.example.com/other/index.html',
 } as chrome.tabs.Tab;
 
 const queryMap = new Map([
 	['https://example.com/*', [tab1]],
-	['http://no-way.example.com/*', [tab2]],
+	['https://no-way.example.com/*', [tab2]],
 	['*://*/*', [tab1, tab2]],
 ]);
 
-// @ts-expect-error junk types
 chrome.tabs.query.mockImplementation((query, callback: (...arguments_: any) => void) => {
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- Junk types
-	callback(queryMap.get(query.url[0]) ?? []);
+	callback(queryMap.get((query.url as string[])[0]!) ?? []);
 });
 
 describe('getTabsByUrl', () => {
@@ -63,7 +64,7 @@ describe('getTabsByUrl', () => {
 			'It should exclude tabs with URLs matching `excludeMatches`',
 		);
 		assert.deepEqual(
-			await getTabsByUrl(['http://no-way.example.com/*'], excludeMatches),
+			await getTabsByUrl(['https://no-way.example.com/*'], excludeMatches),
 			[],
 			'It should exclude tabs with URLs matching `excludeMatches`, even if it’s the only match',
 		);
