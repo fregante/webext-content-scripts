@@ -96,8 +96,11 @@ injectContentScript(1, scripts);
 injectContentScript([1, 2], scripts)
 injectContentScript({tabId: 1, frameId: 0}, scripts);
 injectContentScript([{tabId: 1, frameId: 0}, {tabId: 23, frameId: 98765}], scripts);
+```
 
-// You can also use `webext-tools` to inject by URL as well
+You can also use [`queryTabsByUrl`](https://github.com/fregante/webext-tools/blob/main/source/query-tabs-by-url.md) from `webext-tools` to inject by URL:
+
+```js
 import queryTabsByUrl from 'webext-tools/query-tabs-by-url.js';
 injectContentScript(await queryTabsByUrl(['https://example.com/*']), scripts);
 ```
@@ -223,7 +226,7 @@ if (access) {
 
 ### `assertTabAccess({tabId, frameId})`
 
-Like `canAccessTab`, but instead of returning `false` on failure it throws whatever error the browser throws. 
+Like `canAccessTab`, but instead of returning `false` on failure it throws whatever error the browser throws.
 
 Note that you don't need to verify access before calling `executeScript`, just call `executeScript` directly and it will throw exactly the same way.
 

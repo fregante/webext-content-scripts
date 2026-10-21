@@ -3,10 +3,9 @@ import {chrome} from 'jest-chrome';
 import {
 	describe,
 	it,
-	assert,
 	expect,
 } from 'vitest';
-import {executeFunction, getTabsByUrl, assertTabAccess} from './index.js';
+import {executeFunction, assertTabAccess} from './index.js';
 
 const tab1 = {
 	id: 1,
@@ -25,50 +24,6 @@ const queryMap = new Map([
 
 chrome.tabs.query.mockImplementation((query, callback: (...arguments_: any) => void) => {
 	callback(queryMap.get((query.url as string[])[0]!) ?? []);
-});
-
-describe('getTabsByUrl', () => {
-	it('should handle the matches array', async () => {
-		assert.deepEqual(
-			await getTabsByUrl([]),
-			[],
-			'No patterns means no tabs',
-		);
-		assert.deepEqual(
-			await getTabsByUrl(['https://example.com/*']),
-			[1],
-			'It should pass the query to chrome.tabs',
-		);
-		assert.deepEqual(
-			await getTabsByUrl(['*://*/*']),
-			[1, 2],
-			'It should pass the query to chrome.tabs',
-		);
-	});
-
-	it('should handle the `excludeMatches` array', async () => {
-		const excludeMatches = ['http://*/*'];
-		assert.deepEqual(
-			await getTabsByUrl([], excludeMatches),
-			[],
-			'No patterns means no tabs',
-		);
-		assert.deepEqual(
-			await getTabsByUrl(['https://example.com/*'], excludeMatches),
-			[1],
-			'It should pass the query to chrome.tabs',
-		);
-		assert.deepEqual(
-			await getTabsByUrl(['*://*/*'], excludeMatches),
-			[1],
-			'It should exclude tabs with URLs matching `excludeMatches`',
-		);
-		assert.deepEqual(
-			await getTabsByUrl(['http://no-way.example.com/*'], excludeMatches),
-			[],
-			'It should exclude tabs with URLs matching `excludeMatches`, even if it’s the only match',
-		);
-	});
 });
 
 describe('executeFunction', () => {
