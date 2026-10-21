@@ -4,6 +4,7 @@ import {
 	describe,
 	it,
 	expect,
+	vi,
 } from 'vitest';
 import {executeFunction, assertTabAccess} from './index.js';
 
@@ -38,13 +39,9 @@ describe('assertTabAccess', () => {
 	});
 
 	it('should throw the browser error when access is denied', async () => {
-		// @ts-expect-error junk types
-		chrome.tabs.executeScript.mockImplementationOnce((_tabId: number, _options: unknown, callback: (...arguments_: any) => void) => {
-			// Simulate browser denying access
-			chrome.runtime.lastError = {message: 'Cannot access contents of the page. Extension manifest must request permission to access this host.'};
-			callback();
-			chrome.runtime.lastError = undefined;
-		});
+		// Simulate browser denying access
+		const executeScript = vi.fn().mockRejectedValueOnce(new Error('Cannot access contents of the page. Extension manifest must request permission to access this host.'));
+		Object.assign(globalThis.chrome, {scripting: {executeScript}});
 
 		await expect(assertTabAccess(1)).rejects.toThrow('Cannot access contents of the page');
 	});

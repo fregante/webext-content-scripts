@@ -1,7 +1,7 @@
 {
 	"name": "webext-content-scripts",
 	"version": "2.8.0",
-	"description": "Utility functions to inject content scripts in WebExtensions, for Manifest v2 and v3",
+	"description": "Utility functions to inject content scripts in WebExtensions, for Manifest v3",
 	"license": "MIT",
 	"repository": "fregante/webext-content-scripts",
 	"funding": "https://github.com/sponsors/fregante",
@@ -37,12 +37,8 @@
 		"executefunction",
 		"executescript",
 		"insertcss",
-		"mv2",
 		"mv3"
 	],
-	"dependencies": {
-		"webext-polyfill-kinda": "^1.0.2"
-	},
 	"devDependencies": {
 		"@sindresorhus/tsconfig": "^8.1.0",
 		"@types/chrome": "^0.3.5",
