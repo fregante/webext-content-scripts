@@ -14,12 +14,12 @@ const tab1 = {
 } as chrome.tabs.Tab;
 const tab2 = {
 	id: 2,
-	url: 'https://no-way.example.com/other/index.html',
+	url: 'http://no-way.example.com/other/index.html',
 } as chrome.tabs.Tab;
 
 const queryMap = new Map([
 	['https://example.com/*', [tab1]],
-	['https://no-way.example.com/*', [tab2]],
+	['http://no-way.example.com/*', [tab2]],
 	['*://*/*', [tab1, tab2]],
 ]);
 
@@ -64,7 +64,7 @@ describe('getTabsByUrl', () => {
 			'It should exclude tabs with URLs matching `excludeMatches`',
 		);
 		assert.deepEqual(
-			await getTabsByUrl(['https://no-way.example.com/*'], excludeMatches),
+			await getTabsByUrl(['http://no-way.example.com/*'], excludeMatches),
 			[],
 			'It should exclude tabs with URLs matching `excludeMatches`, even if it’s the only match',
 		);
