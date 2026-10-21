@@ -1,5 +1,4 @@
 import chromeP from 'webext-polyfill-kinda';
-import {patternToRegex} from 'webext-patterns';
 import type {ContentScript, ExtensionFileOrCode, RunAt} from './types.js';
 
 export type * from './types.js';
@@ -229,24 +228,6 @@ export async function executeScript(
 	} else {
 		await Promise.all(executions);
 	}
-}
-
-/**
- Get the IDs of the tabs matching the patterns.
-
- @deprecated Use `webext-tools` instead: import queryTabsByUrl from 'webext-tools/query-tabs-by-url.js';
- */
-export async function getTabsByUrl(matches: string[], excludeMatches?: string[]): Promise<number[]> {
-	if (matches.length === 0) {
-		return [];
-	}
-
-	const exclude = excludeMatches ? patternToRegex(...excludeMatches) : undefined;
-
-	const tabs = await chromeP.tabs.query({url: matches});
-	return tabs
-		.filter(tab => tab.id !== undefined && tab.url !== undefined && (!exclude?.test(tab.url)))
-		.map(tab => tab.id!);
 }
 
 export async function injectContentScript(
