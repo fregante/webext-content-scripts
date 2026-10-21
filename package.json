@@ -41,7 +41,6 @@
 		"mv3"
 	],
 	"dependencies": {
-		"webext-patterns": "^3.0.0",
 		"webext-polyfill-kinda": "^1.0.2"
 	},
 	"devDependencies": {

@@ -7,6 +7,8 @@ const xoConfig = [
 	{
 		files: ['index.test.ts'],
 		rules: {
+			// Tests cover the deprecated `getTabsByUrl`
+			'@typescript-eslint/no-deprecated': 'off',
 			// Tests need to cover `http:` URLs
 			'unicorn/prefer-https': 'off',
 		},

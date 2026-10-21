@@ -1,5 +1,4 @@
 import chromeP from 'webext-polyfill-kinda';
-import {patternToRegex} from 'webext-patterns';
 import type {ContentScript, ExtensionFileOrCode, RunAt} from './types.js';
 
 export type * from './types.js';
