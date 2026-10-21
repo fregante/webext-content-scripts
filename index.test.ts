@@ -6,7 +6,7 @@ import {
 	expect,
 	vi,
 } from 'vitest';
-import {executeFunction, assertTabAccess} from './index.js';
+import {assertTabAccess} from './index.js';
 
 const tab1 = {
 	id: 1,
@@ -27,17 +27,7 @@ chrome.tabs.query.mockImplementation((query, callback: (...arguments_: any) => v
 	callback(queryMap.get((query.url as string[])[0]!) ?? []);
 });
 
-describe('executeFunction', () => {
-	it('should throw with native functions', async () => {
-		await expect(executeFunction(1, Date)).rejects.toMatchInlineSnapshot('[TypeError: Native functions need to be wrapped first, like `executeFunction(1, () => alert(1))`]');
-	});
-});
-
 describe('assertTabAccess', () => {
-	it('should throw with native functions', async () => {
-		await expect(assertTabAccess(1)).rejects.toMatchInlineSnapshot('[TypeError: Native functions need to be wrapped first, like `executeFunction(1, () => alert(1))`]');
-	});
-
 	it('should throw the browser error when access is denied', async () => {
 		// Simulate browser denying access
 		const executeScript = vi.fn().mockRejectedValueOnce(new Error('Cannot access contents of the page. Extension manifest must request permission to access this host.'));

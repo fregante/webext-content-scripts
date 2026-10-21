@@ -67,31 +67,6 @@ function normalizeFiles(files: InjectionDetails['files'], seen: string[] = []): 
 
 type MaybeArray<X> = X | X[];
 
-const nativeFunction = /^function \w+\(\) \{[\s]+\[native code\][\s]+\}/v;
-
-export async function executeFunction<FunctionToSerialize extends (...arguments_: any[]) => unknown>(
-	target: number | Target,
-	function_: FunctionToSerialize,
-	...arguments_: unknown[]
-): Promise<ReturnType<FunctionToSerialize>> {
-	if (nativeFunction.test(String(function_))) {
-		throw new TypeError('Native functions need to be wrapped first, like `executeFunction(1, () => alert(1))`');
-	}
-
-	const {frameId, tabId} = castTarget(target);
-
-	const [injection] = await chrome.scripting.executeScript({
-		target: {
-			tabId,
-			frameIds: [frameId],
-		},
-		func: function_,
-		args: arguments_,
-	});
-
-	return injection?.result as ReturnType<FunctionToSerialize>;
-}
-
 function getInjectionTarget(tabId: number, frameId?: number, isAllFrames?: boolean): chrome.scripting.InjectionTarget {
 	if (frameId !== undefined) {
 		return {tabId, frameIds: [frameId]};
@@ -287,5 +262,12 @@ export async function canAccessTab(
 export async function assertTabAccess(
 	target: number | Target,
 ): Promise<void> {
-	await executeFunction(castTarget(target), () => true);
+	const {tabId, frameId} = castTarget(target);
+	await chrome.scripting.executeScript({
+		target: {
+			tabId,
+			frameIds: [frameId],
+		},
+		func: () => true,
+	});
 }

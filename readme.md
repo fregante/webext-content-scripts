@@ -23,7 +23,6 @@ import {
 	executeScript,
 	insertCSS,
 	injectContentScript,
-	executeFunction,
 	canAccessTab,
 	assertTabAccess,
 } from 'webext-content-scripts';
@@ -136,45 +135,6 @@ const scripts = browser.runtime.getManifest().content_scripts;
 await injectContentScript(tabId, scripts);
 ```
 
-### `executeFunction(tabId, function, ...arguments)`
-
-### `executeFunction({tabId, frameId}, function, ...arguments)`
-
-Like `chrome.tabs.executeScript`, except that it accepts a raw function to be executed in the chosen tab.
-
-```js
-const tabId = 10;
-
-const tabUrl = await executeFunction(tabId, () => {
-	alert('This code is run as a content script');
-	return location.href;
-});
-
-console.log(tabUrl);
-```
-
-Note: The function must be self-contained because it will be serialized.
-
-```js
-const tabId = 10;
-const catsAndDogs = 'cute';
-
-await executeFunction(tabId, () => {
-	console.log(catsAndDogs); // ERROR: catsAndDogs will be undeclared and will throw an error
-});
-```
-
-you must pass it as arguments:
-
-```js
-const tabId = 10;
-const catsAndDogs = 'cute';
-
-await executeFunction(tabId, (localCatsAndDogs) => {
-	console.log(localCatsAndDogs); // It logs "cute"
-}, catsAndDogs); // Argument
-```
-
 ### `canAccessTab(tabId)`
 
 ### `canAccessTab({tabId, frameId})`
@@ -186,7 +146,7 @@ const tabId = 42;
 const access = await canAccessTab(tabId);
 if (access) {
 	console.log('We can access this tab');
-	chrome.tabs.executeScript(tabId, {file: 'my-script.js'});
+	chrome.scripting.executeScript({target: {tabId}, files: ['my-script.js']});
 } else {
 	console.warn('We have no access to the tab');
 }
