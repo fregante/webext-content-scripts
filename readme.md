@@ -45,22 +45,9 @@ executeScript({
 });
 ```
 
-```js
-executeScript({
-	tabId: 1,
-	frameId: 20,
-	files: [
-		{file: 'react.js'},
-		{code: 'console.log(42)'}, // This will throw
-	],
-});
-```
-
 ### `insertCSS`
 
-Like `chrome.scripting.insertCSS` but:
-
-- it can insert multiple styles at once
+Like `chrome.scripting.insertCSS` but it can insert multiple styles at once:
 
 ```js
 insertCSS({
