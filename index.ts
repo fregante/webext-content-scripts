@@ -1,9 +1,6 @@
-import chromeP from 'webext-polyfill-kinda';
 import type {ContentScript, ExtensionFileOrCode, RunAt} from './types.js';
 
 export type * from './types.js';
-
-const isGotScripting = Boolean(globalThis.chrome?.scripting);
 
 interface AllFramesTarget {
 	tabId: number;
@@ -83,26 +80,16 @@ export async function executeFunction<FunctionToSerialize extends (...arguments_
 
 	const {frameId, tabId} = castTarget(target);
 
-	if (isGotScripting) {
-		const [injection] = await chrome.scripting.executeScript({
-			target: {
-				tabId,
-				frameIds: [frameId],
-			},
-			func: function_,
-			args: arguments_,
-		});
+	const [injection] = await chrome.scripting.executeScript({
+		target: {
+			tabId,
+			frameIds: [frameId],
+		},
+		func: function_,
+		args: arguments_,
+	});
 
-		return injection?.result as ReturnType<FunctionToSerialize>;
-	}
-
-	const [result] = await chromeP.tabs.executeScript(tabId, {
-		code: `(${function_.toString()})(...${JSON.stringify(arguments_)})`,
-		matchAboutBlank: true, // Needed for `srcdoc` frames; doesn't hurt normal pages
-		frameId,
-	}) as [ReturnType<FunctionToSerialize>];
-
-	return result;
+	return injection?.result as ReturnType<FunctionToSerialize>;
 }
 
 function getInjectionTarget(tabId: number, frameId?: number, isAllFrames?: boolean): chrome.scripting.InjectionTarget {
@@ -131,32 +118,18 @@ export async function insertCSS(
 		frameId,
 		files,
 		allFrames,
-		matchAboutBlank,
-		runAt,
 	}: InjectionDetails,
 
 	{ignoreTargetErrors}: InjectionOptions = {},
 ): Promise<void> {
 	const normalizedFiles = normalizeFiles(files);
-	const everyInsertion = Promise.all(normalizedFiles.map(async content => {
-		if (isGotScripting) {
-			// One file at a time, according to the types
-			return chrome.scripting.insertCSS({
-				target: getInjectionTarget(tabId, frameId, allFrames),
-				...('file' in content
-					? {files: [content.file]}
-					: {css: content.code}),
-			});
-		}
-
-		return chromeP.tabs.insertCSS(tabId, {
-			...content,
-			matchAboutBlank,
-			allFrames,
-			frameId,
-			runAt: runAt ?? 'document_start', // CSS should prefer `document_start` when unspecified
-		});
-	}));
+	// One file at a time, according to the types
+	const everyInsertion = Promise.all(normalizedFiles.map(async content => chrome.scripting.insertCSS({
+		target: getInjectionTarget(tabId, frameId, allFrames),
+		...('file' in content
+			? {files: [content.file]}
+			: {css: content.code}),
+	})));
 
 	if (ignoreTargetErrors) {
 		await catchTargetInjectionErrors(everyInsertion);
@@ -181,53 +154,24 @@ export async function executeScript(
 		frameId,
 		files,
 		allFrames,
-		matchAboutBlank,
-		runAt,
 	}: InjectionDetails,
 
 	{ignoreTargetErrors}: InjectionOptions = {},
 ): Promise<void> {
 	const normalizedFiles = normalizeFiles(files);
-	if (isGotScripting) {
-		assertNoCode(normalizedFiles);
-		const injection = chrome.scripting.executeScript({
-			target: getInjectionTarget(tabId, frameId, allFrames),
-			files: normalizedFiles.map(({file}) => file),
-		});
-
-		if (ignoreTargetErrors) {
-			await catchTargetInjectionErrors(injection);
-		} else {
-			await injection;
-		}
-
-		// Don't return `injection`; the "return value" of a file is generally not useful
-		return;
-	}
-
-	// Don't use .map(), `code` injections can't be "parallel"
-	const executions: Array<Promise<unknown>> = [];
-	for (const content of normalizedFiles) {
-		// Files are executed in order, but `code` isn’t, so it must await the last script before injecting more
-		if ('code' in content) {
-			// eslint-disable-next-line no-await-in-loop, unicorn/no-unused-builtin-method-return -- On purpose, see above
-			await executions.at(-1);
-		}
-
-		executions.push(chromeP.tabs.executeScript(tabId, {
-			...content,
-			matchAboutBlank,
-			allFrames,
-			frameId,
-			runAt,
-		}));
-	}
+	assertNoCode(normalizedFiles);
+	const injection = chrome.scripting.executeScript({
+		target: getInjectionTarget(tabId, frameId, allFrames),
+		files: normalizedFiles.map(({file}) => file),
+	});
 
 	if (ignoreTargetErrors) {
-		await catchTargetInjectionErrors(Promise.all(executions));
+		await catchTargetInjectionErrors(injection);
 	} else {
-		await Promise.all(executions);
+		await injection;
 	}
+
+	// Don't return `injection`; the "return value" of a file is generally not useful
 }
 
 export async function injectContentScript(

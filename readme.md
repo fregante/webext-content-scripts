@@ -1,10 +1,10 @@
 # webext-content-scripts [![npm version](https://img.shields.io/npm/v/webext-content-scripts.svg)](https://www.npmjs.com/package/webext-content-scripts)
 
-> Utility functions to inject content scripts in WebExtensions, for Manifest v2 and v3.
+> Utility functions to inject content scripts in WebExtensions, for Manifest v3.
 
 - Browsers: Chrome, Firefox, and Safari
-- Manifest: v2 and v3
-- Permissions: In manifest v3, you'll need the `scripting` permission
+- Manifest: v3
+- Permissions: `scripting`
 - Context: They can be called from any context that has access to the `chrome.tabs` or `chrome.scripting` APIs
 
 **Sponsored by [PixieBrix](https://www.pixiebrix.com)** :tada:
@@ -33,10 +33,7 @@ import {
 
 ### `executeScript`
 
-Like `chrome.tabs.executeScript` but:
-
-- it works on Manifest v3
-- it can execute multiple scripts at once
+Like `chrome.scripting.executeScript`:
 
 ```js
 executeScript({
@@ -46,23 +43,9 @@ executeScript({
 });
 ```
 
-```js
-executeScript({
-	tabId: 1,
-	frameId: 20,
-	files: [
-		{file: 'react.js'},
-		{code: 'console.log(42)'}, // This will fail on Manifest v3
-	],
-});
-```
-
 ### `insertCSS`
 
-Like `chrome.tabs.insertCSS` but:
-
-- it works on Manifest v3
-- it can insert multiple styles at once
+Like `chrome.scripting.insertCSS`:
 
 ```js
 insertCSS({
