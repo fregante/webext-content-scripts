@@ -30,7 +30,7 @@ import {
 
 ### `injectContentScript(targets, scripts)`
 
-It combines `chrome.scripting.executeScript` and `chrome.scripting.insertCSS` in a single call. You can pass the entire `content_script` object from the manifest too, without change (even with `snake_case_keys`). It accepts either an object or an array of objects.
+It combines `chrome.scripting.executeScript` and `chrome.scripting.insertCSS` in a single call. It accepts `content_scripts` entries in the same format as `manifest.json` (`snake_case_keys`, files only), so you can pass the array from the manifest as is. It accepts either an object or an array of objects.
 
 ### targets
 
@@ -55,9 +55,9 @@ injectContentScript(await queryTabsByUrl(['https://example.com/*']), scripts);
 ```js
 const tabId = 42;
 await injectContentScript(tabId, {
-	runAt: 'document_idle',
-	allFrames: true, // Default when passing frame-less tab IDs
-	matchAboutBlank: true,
+	run_at: 'document_idle',
+	all_frames: true, // Default when passing frame-less tab IDs
+	match_about_blank: true,
 	js: [
 		'contentscript.js'
 	],
@@ -83,7 +83,7 @@ await injectContentScript({
 		],
 	},
 	{
-	runAt: 'document_start',
+	run_at: 'document_start',
 		css: [
 			'more-styles.css'
 		],
