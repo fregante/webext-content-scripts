@@ -33,7 +33,7 @@ import {
 
 ### `executeScript`
 
-Like `chrome.scripting.executeScript` but it can execute multiple scripts at once
+Like `chrome.scripting.executeScript`:
 
 ```js
 executeScript({
@@ -45,7 +45,7 @@ executeScript({
 
 ### `insertCSS`
 
-Like `chrome.scripting.insertCSS` but it can insert multiple styles at once:
+Like `chrome.scripting.insertCSS`:
 
 ```js
 insertCSS({
