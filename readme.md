@@ -4,7 +4,7 @@
 
 - Browsers: Chrome, Firefox, and Safari
 - Manifest: v3
-- Permissions: you'll need the `scripting` permission
+- Permissions: `scripting`
 - Context: They can be called from any context that has access to the `chrome.tabs` or `chrome.scripting` APIs
 
 **Sponsored by [PixieBrix](https://www.pixiebrix.com)** :tada:
@@ -33,9 +33,7 @@ import {
 
 ### `executeScript`
 
-Like `chrome.scripting.executeScript` but:
-
-- it can execute multiple scripts at once
+Like `chrome.scripting.executeScript` but it can execute multiple scripts at once
 
 ```js
 executeScript({
