@@ -1,4 +1,4 @@
-import type {ContentScript, ExtensionFileOrCode, RunAt} from './types.js';
+import type {ContentScript} from './types.js';
 
 export type * from './types.js';
 
@@ -46,51 +46,19 @@ function castArray<A = unknown>(possibleArray: A | A[]): A[] {
 	return [possibleArray];
 }
 
-function normalizeFiles(files: InjectionDetails['files'], seen: string[] = []): ExtensionFileOrCode[] {
-	return files
-		.map(file => typeof file === 'string' ? {file} : file)
-		.filter(content => {
-			if ('code' in content) {
-				return true;
-			}
+function dedupeFiles(files: string[], seen: string[]): string[] {
+	return files.filter(file => {
+		if (seen.includes(file)) {
+			console.debug(`Duplicated file not injected: ${file}`);
+			return false;
+		}
 
-			const file = typeof content === 'string' ? content : content.file;
-			if (seen.includes(file)) {
-				console.debug(`Duplicated file not injected: ${file}`);
-				return false;
-			}
-
-			seen.push(file);
-			return true;
-		});
+		seen.push(file);
+		return true;
+	});
 }
 
 type MaybeArray<X> = X | X[];
-
-const nativeFunction = /^function \w+\(\) \{[\s]+\[native code\][\s]+\}/v;
-
-export async function executeFunction<FunctionToSerialize extends (...arguments_: any[]) => unknown>(
-	target: number | Target,
-	function_: FunctionToSerialize,
-	...arguments_: unknown[]
-): Promise<ReturnType<FunctionToSerialize>> {
-	if (nativeFunction.test(String(function_))) {
-		throw new TypeError('Native functions need to be wrapped first, like `executeFunction(1, () => alert(1))`');
-	}
-
-	const {frameId, tabId} = castTarget(target);
-
-	const [injection] = await chrome.scripting.executeScript({
-		target: {
-			tabId,
-			frameIds: [frameId],
-		},
-		func: function_,
-		args: arguments_,
-	});
-
-	return injection?.result as ReturnType<FunctionToSerialize>;
-}
 
 function getInjectionTarget(tabId: number, frameId?: number, isAllFrames?: boolean): chrome.scripting.InjectionTarget {
 	if (frameId !== undefined) {
@@ -100,78 +68,6 @@ function getInjectionTarget(tabId: number, frameId?: number, isAllFrames?: boole
 	return isAllFrames === true
 		? {tabId, allFrames: true}
 		: {tabId};
-}
-
-interface InjectionDetails {
-	tabId: number;
-	frameId?: number;
-	matchAboutBlank?: boolean;
-	allFrames?: boolean;
-	runAt?: RunAt;
-	files: string[] | ExtensionFileOrCode[];
-}
-
-// eslint-disable-next-line @typescript-eslint/naming-convention -- It follows the native naming
-export async function insertCSS(
-	{
-		tabId,
-		frameId,
-		files,
-		allFrames,
-	}: InjectionDetails,
-
-	{ignoreTargetErrors}: InjectionOptions = {},
-): Promise<void> {
-	const normalizedFiles = normalizeFiles(files);
-	// One file at a time, according to the types
-	const everyInsertion = Promise.all(normalizedFiles.map(async content => chrome.scripting.insertCSS({
-		target: getInjectionTarget(tabId, frameId, allFrames),
-		...('file' in content
-			? {files: [content.file]}
-			: {css: content.code}),
-	})));
-
-	if (ignoreTargetErrors) {
-		await catchTargetInjectionErrors(everyInsertion);
-	} else {
-		await everyInsertion;
-	}
-}
-
-function assertNoCode(files: Array<{
-	code: string;
-} | {
-	file: string;
-}>): asserts files is Array<{file: string}> {
-	if (files.some(content => 'code' in content)) {
-		throw new Error('chrome.scripting does not support injecting strings of `code`');
-	}
-}
-
-export async function executeScript(
-	{
-		tabId,
-		frameId,
-		files,
-		allFrames,
-	}: InjectionDetails,
-
-	{ignoreTargetErrors}: InjectionOptions = {},
-): Promise<void> {
-	const normalizedFiles = normalizeFiles(files);
-	assertNoCode(normalizedFiles);
-	const injection = chrome.scripting.executeScript({
-		target: getInjectionTarget(tabId, frameId, allFrames),
-		files: normalizedFiles.map(({file}) => file),
-	});
-
-	if (ignoreTargetErrors) {
-		await catchTargetInjectionErrors(injection);
-	} else {
-		await injection;
-	}
-
-	// Don't return `injection`; the "return value" of a file is generally not useful
 }
 
 export async function injectContentScript(
@@ -191,41 +87,26 @@ export async function injectContentScript(
 async function injectContentScriptInSpecificTarget(
 	{frameId, tabId, allFrames}: AllFramesTarget,
 	scripts: MaybeArray<ContentScript>,
-	options: InjectionOptions = {},
+	{ignoreTargetErrors}: InjectionOptions = {},
 ): Promise<void> {
+	const target = getInjectionTarget(tabId, frameId, allFrames);
 	const seen: string[] = [];
 	const injections = castArray(scripts).flatMap(script => {
-		const css = normalizeFiles(script.css ?? [], seen);
-		const js = normalizeFiles(script.js ?? [], seen);
+		const css = dedupeFiles(script.css ?? [], seen);
+		const js = dedupeFiles(script.js ?? [], seen);
 		return [
-			...(css.length > 0
-				? [insertCSS({
-					tabId,
-					frameId,
-					allFrames,
-					files: css,
-					// eslint-disable-next-line @typescript-eslint/no-deprecated -- Supported for backwards compatibility
-					matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
-					// eslint-disable-next-line @typescript-eslint/no-deprecated -- Supported for backwards compatibility
-					runAt: script.runAt ?? script.run_at as RunAt,
-				}, options)]
-				: []),
+			// One file at a time, according to the types
+			...css.map(async file => chrome.scripting.insertCSS({target, files: [file]})),
 			...(js.length > 0
-				? [executeScript({
-					tabId,
-					frameId,
-					allFrames,
-					files: js,
-					// eslint-disable-next-line @typescript-eslint/no-deprecated -- Supported for backwards compatibility
-					matchAboutBlank: script.matchAboutBlank ?? script.match_about_blank,
-					// eslint-disable-next-line @typescript-eslint/no-deprecated -- Supported for backwards compatibility
-					runAt: script.runAt ?? script.run_at as RunAt,
-				}, options)]
+				? [chrome.scripting.executeScript({target, files: js})]
 				: []),
 		];
 	});
 
-	await Promise.all(injections);
+	// Don't return the results; the "return value" of a file is generally not useful
+	await Promise.all(injections.map(async injection => ignoreTargetErrors
+		? catchTargetInjectionErrors(injection)
+		: injection));
 }
 
 // Sourced from:
@@ -287,5 +168,12 @@ export async function canAccessTab(
 export async function assertTabAccess(
 	target: number | Target,
 ): Promise<void> {
-	await executeFunction(castTarget(target), () => true);
+	const {tabId, frameId} = castTarget(target);
+	await chrome.scripting.executeScript({
+		target: {
+			tabId,
+			frameIds: [frameId],
+		},
+		func: () => true,
+	});
 }
