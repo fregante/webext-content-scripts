@@ -87,7 +87,7 @@ interface InjectionDetails {
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention -- It follows the native naming
-export async function insertCSS(
+async function insertCSS(
 	{
 		tabId,
 		frameId,
@@ -123,7 +123,7 @@ function assertNoCode(files: Array<{
 	}
 }
 
-export async function executeScript(
+async function executeScript(
 	{
 		tabId,
 		frameId,

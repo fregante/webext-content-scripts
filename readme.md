@@ -20,8 +20,6 @@ npm install webext-content-scripts
 ```js
 // This module is only offered as a ES Module
 import {
-	executeScript,
-	insertCSS,
 	injectContentScript,
 	canAccessTab,
 	assertTabAccess,
@@ -30,44 +28,9 @@ import {
 
 ## Usage
 
-### `executeScript`
-
-Like `chrome.scripting.executeScript`:
-
-```js
-executeScript({
-	tabId: 1,
-	frameId: 20,
-	files: ['react.js', 'main.js'],
-});
-```
-
-### `insertCSS`
-
-Like `chrome.scripting.insertCSS`:
-
-```js
-insertCSS({
-	tabId: 1,
-	frameId: 20,
-	files: ['bootstrap.css', 'style.css'],
-});
-```
-
-```js
-insertCSS({
-	tabId: 1,
-	frameId: 20,
-	files: [
-		{file: 'bootstrap.css'},
-		{code: 'hmtl { color: red }'}
-	],
-});
-```
-
 ### `injectContentScript(targets, scripts)`
 
-It combines `executeScript` and `injectCSS` in a single call. You can pass the entire `content_script` object from the manifest too, without change (even with `snake_case_keys`). It accepts either an object or an array of objects.
+It combines `chrome.scripting.executeScript` and `chrome.scripting.insertCSS` in a single call. You can pass the entire `content_script` object from the manifest too, without change (even with `snake_case_keys`). It accepts either an object or an array of objects.
 
 ### targets
 
@@ -171,7 +134,7 @@ if (access) {
 
 Like `canAccessTab`, but instead of returning `false` on failure it throws whatever error the browser throws.
 
-Note that you don't need to verify access before calling `executeScript`, just call `executeScript` directly and it will throw exactly the same way.
+Note that you don't need to verify access before calling `chrome.scripting.executeScript`, just call it directly and it will throw exactly the same way.
 
 ```js
 const tabId = 42;
