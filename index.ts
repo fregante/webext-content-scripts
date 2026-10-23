@@ -89,16 +89,23 @@ async function injectContentScriptInSpecificTarget(
 	scripts: MaybeArray<ContentScript>,
 	{ignoreTargetErrors}: InjectionOptions = {},
 ): Promise<void> {
-	const target = getInjectionTarget(tabId, frameId, allFrames);
 	const seen: string[] = [];
 	const injections = castArray(scripts).flatMap(script => {
+		// Explicit `all_frames: false` limits tab-wide injections to the top frame, like in the manifest
+		const target = getInjectionTarget(tabId, frameId, allFrames && script.all_frames !== false);
 		const css = dedupeFiles(script.css ?? [], seen);
 		const js = dedupeFiles(script.js ?? [], seen);
 		return [
 			// One file at a time, according to the types
 			...css.map(async file => chrome.scripting.insertCSS({target, files: [file]})),
 			...(js.length > 0
-				? [chrome.scripting.executeScript({target, files: js})]
+				? [chrome.scripting.executeScript({
+					target,
+					files: js,
+					world: script.world,
+					// `document_end` and `document_idle` are the same as the default behavior
+					injectImmediately: script.run_at === 'document_start' ? true : undefined,
+				})]
 				: []),
 		];
 	});
