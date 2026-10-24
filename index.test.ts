@@ -1,9 +1,12 @@
-/* eslint-disable @typescript-eslint/consistent-type-assertions */
+/* eslint-disable @typescript-eslint/consistent-type-assertions -- Test mocks need assertions */
 import {chrome} from 'jest-chrome';
 import {
-	describe, it, assert, expect,
+	describe,
+	it,
+	expect,
+	vi,
 } from 'vitest';
-import {executeFunction, getTabsByUrl} from './index.js';
+import {assertTabAccess} from './index.js';
 
 const tab1 = {
 	id: 1,
@@ -20,58 +23,16 @@ const queryMap = new Map([
 	['*://*/*', [tab1, tab2]],
 ]);
 
-// @ts-expect-error junk types
 chrome.tabs.query.mockImplementation((query, callback: (...arguments_: any) => void) => {
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- Junk types
-	callback(queryMap.get(query.url[0]) ?? []);
+	callback(queryMap.get((query.url as string[])[0]!) ?? []);
 });
 
-describe('getTabsByUrl', () => {
-	it('should handle the matches array', async () => {
-		assert.deepEqual(
-			await getTabsByUrl([]),
-			[],
-			'No patterns means no tabs',
-		);
-		assert.deepEqual(
-			await getTabsByUrl(['https://example.com/*']),
-			[1],
-			'It should pass the query to chrome.tabs',
-		);
-		assert.deepEqual(
-			await getTabsByUrl(['*://*/*']),
-			[1, 2],
-			'It should pass the query to chrome.tabs',
-		);
-	});
+describe('assertTabAccess', () => {
+	it('should throw the browser error when access is denied', async () => {
+		// Simulate browser denying access
+		const executeScript = vi.fn().mockRejectedValueOnce(new Error('Cannot access contents of the page. Extension manifest must request permission to access this host.'));
+		Object.assign(globalThis.chrome, {scripting: {executeScript}});
 
-	it('should handle the `excludeMatches` array', async () => {
-		const excludeMatches = ['http://*/*'];
-		assert.deepEqual(
-			await getTabsByUrl([], excludeMatches),
-			[],
-			'No patterns means no tabs',
-		);
-		assert.deepEqual(
-			await getTabsByUrl(['https://example.com/*'], excludeMatches),
-			[1],
-			'It should pass the query to chrome.tabs',
-		);
-		assert.deepEqual(
-			await getTabsByUrl(['*://*/*'], excludeMatches),
-			[1],
-			'It should exclude tabs with URLs matching `excludeMatches`',
-		);
-		assert.deepEqual(
-			await getTabsByUrl(['http://no-way.example.com/*'], excludeMatches),
-			[],
-			'It should exclude tabs with URLs matching `excludeMatches`, even if it’s the only match',
-		);
-	});
-});
-
-describe('executeFunction', () => {
-	it('should throw with native functions', async () => {
-		await expect(executeFunction(1, Date)).rejects.toMatchInlineSnapshot('[TypeError: Native functions need to be wrapped first, like `executeFunction(1, () => alert(1))`]');
+		await expect(assertTabAccess(1)).rejects.toThrow('Cannot access contents of the page');
 	});
 });

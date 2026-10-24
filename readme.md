@@ -1,10 +1,10 @@
 # webext-content-scripts [![npm version](https://img.shields.io/npm/v/webext-content-scripts.svg)](https://www.npmjs.com/package/webext-content-scripts)
 
-> Utility functions to inject content scripts in WebExtensions, for Manifest v2 and v3.
+> Utility functions to inject content scripts in WebExtensions, for Manifest v3.
 
 - Browsers: Chrome, Firefox, and Safari
-- Manifest: v2 and v3
-- Permissions: In manifest v3, you'll need the `scripting` permission
+- Manifest: v3
+- Permissions: `scripting`
 - Context: They can be called from any context that has access to the `chrome.tabs` or `chrome.scripting` APIs
 
 **Sponsored by [PixieBrix](https://www.pixiebrix.com)** :tada:
@@ -20,71 +20,17 @@ npm install webext-content-scripts
 ```js
 // This module is only offered as a ES Module
 import {
-	executeScript,
-	insertCSS,
 	injectContentScript,
-	executeFunction,
 	canAccessTab,
+	assertTabAccess,
 } from 'webext-content-scripts';
 ```
 
 ## Usage
 
-### `executeScript`
-
-Like `chrome.tabs.executeScript` but:
-
-- it works on Manifest v3
-- it can execute multiple scripts at once
-
-```js
-executeScript({
-	tabId: 1,
-	frameId: 20,
-	files: ['react.js', 'main.js'],
-});
-```
-
-```js
-executeScript({
-	tabId: 1,
-	frameId: 20,
-	files: [
-		{file: 'react.js'},
-		{code: 'console.log(42)'}, // This will fail on Manifest v3
-	],
-});
-```
-
-### `insertCSS`
-
-Like `chrome.tabs.insertCSS` but:
-
-- it works on Manifest v3
-- it can insert multiple styles at once
-
-```js
-insertCSS({
-	tabId: 1,
-	frameId: 20,
-	files: ['bootstrap.css', 'style.css'],
-});
-```
-
-```js
-insertCSS({
-	tabId: 1,
-	frameId: 20,
-	files: [
-		{file: 'bootstrap.css'},
-		{code: 'hmtl { color: red }'}
-	],
-});
-```
-
 ### `injectContentScript(targets, scripts)`
 
-It combines `executeScript` and `injectCSS` in a single call. You can pass the entire `content_script` object from the manifest too, without change (even with `snake_case_keys`). It accepts either an object or an array of objects.
+It combines `chrome.scripting.executeScript` and `chrome.scripting.insertCSS` in a single call. It accepts `content_scripts` entries in the same format as `manifest.json` (`snake_case_keys`, files only), so you can pass the array from the manifest as is. It accepts either an object or an array of objects.
 
 ### targets
 
@@ -95,9 +41,13 @@ injectContentScript(1, scripts);
 injectContentScript([1, 2], scripts)
 injectContentScript({tabId: 1, frameId: 0}, scripts);
 injectContentScript([{tabId: 1, frameId: 0}, {tabId: 23, frameId: 98765}], scripts);
+```
 
-// You can also use the exported `getTabsByUrl` utility to inject by URL as well
-injectContentScript(await getTabsByUrl(['https://example.com/*']), scripts);
+You can also use [`queryTabsByUrl`](https://github.com/fregante/webext-tools/blob/main/source/query-tabs-by-url.md) from `webext-tools` to inject by URL:
+
+```js
+import queryTabsByUrl from 'webext-tools/query-tabs-by-url.js';
+injectContentScript(await queryTabsByUrl(['https://example.com/*']), scripts);
 ```
 
 ### Examples
@@ -105,9 +55,9 @@ injectContentScript(await getTabsByUrl(['https://example.com/*']), scripts);
 ```js
 const tabId = 42;
 await injectContentScript(tabId, {
-	runAt: 'document_idle',
-	allFrames: true, // Default when passing frame-less tab IDs
-	matchAboutBlank: true,
+	run_at: 'document_idle',
+	all_frames: true, // Default when passing frame-less tab IDs
+	match_about_blank: true,
 	js: [
 		'contentscript.js'
 	],
@@ -133,7 +83,7 @@ await injectContentScript({
 		],
 	},
 	{
-	runAt: 'document_start',
+	run_at: 'document_start',
 		css: [
 			'more-styles.css'
 		],
@@ -148,45 +98,6 @@ const scripts = browser.runtime.getManifest().content_scripts;
 await injectContentScript(tabId, scripts);
 ```
 
-### `executeFunction(tabId, function, ...arguments)`
-
-### `executeFunction({tabId, frameId}, function, ...arguments)`
-
-Like `chrome.tabs.executeScript`, except that it accepts a raw function to be executed in the chosen tab.
-
-```js
-const tabId = 10;
-
-const tabUrl = await executeFunction(tabId, () => {
-	alert('This code is run as a content script');
-	return location.href;
-});
-
-console.log(tabUrl);
-```
-
-Note: The function must be self-contained because it will be serialized.
-
-```js
-const tabId = 10;
-const catsAndDogs = 'cute';
-
-await executeFunction(tabId, () => {
-	console.log(catsAndDogs); // ERROR: catsAndDogs will be undeclared and will throw an error
-});
-```
-
-you must pass it as arguments:
-
-```js
-const tabId = 10;
-const catsAndDogs = 'cute';
-
-await executeFunction(tabId, (localCatsAndDogs) => {
-	console.log(localCatsAndDogs); // It logs "cute"
-}, catsAndDogs); // Argument
-```
-
 ### `canAccessTab(tabId)`
 
 ### `canAccessTab({tabId, frameId})`
@@ -198,7 +109,7 @@ const tabId = 42;
 const access = await canAccessTab(tabId);
 if (access) {
 	console.log('We can access this tab');
-	chrome.tabs.executeScript(tabId, {file: 'my-script.js'});
+	chrome.scripting.executeScript({target: {tabId}, files: ['my-script.js']});
 } else {
 	console.warn('We have no access to the tab');
 }
@@ -215,6 +126,20 @@ if (access) {
 } else {
 	console.warn('We have no access to the frame');
 }
+```
+
+### `assertTabAccess(tabId)`
+
+### `assertTabAccess({tabId, frameId})`
+
+Like `canAccessTab`, but instead of returning `false` on failure it throws whatever error the browser throws.
+
+Note that you don't need to verify access before calling `chrome.scripting.executeScript`, just call it directly and it will throw exactly the same way.
+
+```js
+const tabId = 42;
+await assertTabAccess(tabId); // throws if the extension has no access
+chrome.tabs.repload(tabId);
 ```
 
 ### `isScriptableUrl(url)`

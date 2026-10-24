@@ -1,7 +1,31 @@
 {
 	"name": "webext-content-scripts",
-	"version": "2.7.0",
-	"description": "Utility functions to inject content scripts in WebExtensions, for Manifest v2 and v3",
+	"version": "3.0.0",
+	"description": "Utility functions to inject content scripts in WebExtensions, for Manifest v3",
+	"license": "MIT",
+	"repository": "fregante/webext-content-scripts",
+	"funding": "https://github.com/sponsors/fregante",
+	"author": "Federico Brigante <me@fregante.com> (https://fregante.com)",
+	"type": "module",
+	"exports": {
+		"types": "./index.d.ts",
+		"default": "./index.js"
+	},
+	"sideEffects": false,
+	"engines": {
+		"node": ">=24"
+	},
+	"scripts": {
+		"build": "tsc",
+		"prepare": "tsc --sourceMap false",
+		"test": "xo && vitest && tsc --noEmit",
+		"watch": "tsc --watch"
+	},
+	"files": [
+		"index.js",
+		"index.d.ts",
+		"types.d.ts"
+	],
 	"keywords": [
 		"contentscript",
 		"injection",
@@ -10,53 +34,18 @@
 		"firefox",
 		"browser",
 		"extension",
-		"executefunction",
 		"executescript",
 		"insertcss",
-		"mv2",
 		"mv3"
 	],
-	"repository": "fregante/webext-content-scripts",
-	"funding": "https://github.com/sponsors/fregante",
-	"license": "MIT",
-	"author": "Federico Brigante <me@fregante.com> (https://fregante.com)",
-	"type": "module",
-	"exports": "./index.js",
-	"main": "./index.js",
-	"types": "./index.d.ts",
-	"files": [
-		"index.js",
-		"index.d.ts",
-		"types.d.ts"
-	],
-	"scripts": {
-		"build": "tsc",
-		"prepare": "tsc --sourceMap false",
-		"test": "xo && vitest && tsc --noEmit",
-		"watch": "tsc --watch"
-	},
-	"xo": {
-		"rules": {
-			"unicorn/prefer-ternary": "off",
-			"n/file-extension-in-import": "off",
-			"@typescript-eslint/no-implicit-any-catch": "off",
-			"@typescript-eslint/consistent-type-definitions": "off"
-		}
-	},
-	"dependencies": {
-		"webext-patterns": "^1.5.0",
-		"webext-polyfill-kinda": "^1.0.2"
-	},
 	"devDependencies": {
-		"@sindresorhus/tsconfig": "^7.0.0",
-		"@types/chrome": "^0.0.299",
-		"@types/jest": "^29.5.14",
+		"@sindresorhus/tsconfig": "^8.1.0",
+		"@types/chrome": "^0.3.5",
+		"@types/jest": "^30.0.0",
+		"globals": "^17.13.0",
 		"jest-chrome": "^0.8.0",
-		"typescript": "^5.7.3",
-		"vitest": "^3.0.3",
-		"xo": "^0.60.0"
-	},
-	"engines": {
-		"node": ">=16"
+		"typescript": "^6.0.3",
+		"vitest": "^5.0.5",
+		"xo": "^5.0.1"
 	}
 }
