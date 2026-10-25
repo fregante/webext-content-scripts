@@ -1,6 +1,6 @@
 {
 	"name": "webext-content-scripts",
-	"version": "3.0.0",
+	"version": "3.1.0",
 	"description": "Utility functions to inject content scripts in WebExtensions, for Manifest v3",
 	"license": "MIT",
 	"repository": "fregante/webext-content-scripts",
