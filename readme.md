@@ -32,6 +32,17 @@ import {
 
 It combines `chrome.scripting.executeScript` and `chrome.scripting.insertCSS` in a single call. It accepts `content_scripts` entries in the same format as `manifest.json` (`snake_case_keys`, files only), so you can pass the array from the manifest as is. It accepts either an object or an array of objects.
 
+The following `content_scripts` fields are supported:
+
+| Field | Behavior |
+| --- | --- |
+| `js`, `css` | Files to inject |
+| `run_at` | `document_start` injects the JavaScript as soon as possible. `document_end` and `document_idle` behave like the default (`document_idle`, or immediately if the page has already loaded). CSS is always injected as soon as possible. |
+| `all_frames` | When targeting a tab ID, all frames are targeted unless it's explicitly `false`. Ignored when targeting a specific frame. |
+| `world` | `ISOLATED` (default) or `MAIN`. Only affects JavaScript. |
+| `matches`, `exclude_matches`, `include_globs`, `exclude_globs` | Ignored, so you can inject on any host that you have permission to |
+| `match_about_blank`, `match_origin_as_fallback` | Ignored, programmatic injections can't opt in or out of these frames |
+
 ### targets
 
 This can be a tab ID, an array of tab IDs, a specific tab/frame combination, an array of such combinations:
