@@ -2,7 +2,7 @@ env: {}
 
 # FILE GENERATED WITH: npx ghat fregante/ghatemplates/node
 # SOURCE: https://github.com/fregante/ghatemplates
-# OPTIONS: {"exclude":["jobs.Test"]}
+# OPTIONS: {}
 
 name: CI
 on:
@@ -20,6 +20,17 @@ jobs:
         run: npm ci || npm install
       - name: XO
         run: npx xo
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: package.json
+      - name: install
+        run: npm ci || npm install
+      - name: Vitest
+        run: npx vitest run
   Build:
     runs-on: ubuntu-latest
     steps:
