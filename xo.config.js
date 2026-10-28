@@ -11,13 +11,8 @@ const xoConfig = [
 			'@typescript-eslint/no-deprecated': 'off',
 			// Tests need to cover `http:` URLs
 			'unicorn/prefer-https': 'off',
-		},
-	},
-	{
-		files: ['package.json'],
-		rules: {
-			// `jest-chrome` types need `@types/jest`
-			'package-json/no-orphan-types': 'off',
+			// `node:test` registers tests, no need to await them
+			'@typescript-eslint/no-floating-promises': 'off',
 		},
 	},
 	{

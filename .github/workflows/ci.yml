@@ -29,8 +29,8 @@ jobs:
           node-version-file: package.json
       - name: install
         run: npm ci || npm install
-      - name: Vitest
-        run: npx vitest run
+      - name: Test
+        run: node --test index.test.js
   Build:
     runs-on: ubuntu-latest
     steps:

@@ -18,7 +18,7 @@
 	"scripts": {
 		"build": "tsc",
 		"prepare": "tsc --sourceMap false",
-		"test": "xo && vitest run && tsc --noEmit",
+		"test": "xo && tsc && node --test index.test.js",
 		"watch": "tsc --watch"
 	},
 	"files": [
@@ -41,11 +41,9 @@
 	"devDependencies": {
 		"@sindresorhus/tsconfig": "^8.1.0",
 		"@types/chrome": "^0.3.5",
-		"@types/jest": "^30.0.0",
+		"@types/node": "^24.0.0",
 		"globals": "^17.13.0",
-		"jest-chrome": "^0.8.0",
 		"typescript": "^6.0.3",
-		"vitest": "^5.0.5",
 		"xo": "^5.0.1"
 	}
 }
