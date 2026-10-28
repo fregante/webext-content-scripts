@@ -5,7 +5,7 @@ import {
 	it,
 	type TestContext,
 } from 'node:test';
-import {assertTabAccess, injectContentScript} from './index.js';
+import {assertTabAccess, injectContentScript} from './index.ts';
 
 describe('assertTabAccess', () => {
 	it('should throw the browser error when access is denied', async t => {

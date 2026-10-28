@@ -30,7 +30,7 @@ jobs:
       - name: install
         run: npm ci || npm install
       - name: Test
-        run: node --test index.test.js
+        run: node --test
   Build:
     runs-on: ubuntu-latest
     steps:
