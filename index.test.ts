@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises -- Fixed upstream */
 /* eslint-disable @typescript-eslint/naming-convention -- Manifest keys and Chrome APIs aren't camelCase */
 import {
 	describe,

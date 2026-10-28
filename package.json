@@ -42,7 +42,6 @@
 		"@sindresorhus/tsconfig": "^8.1.0",
 		"@types/chrome": "^0.3.5",
 		"@types/node": "^24.0.0",
-		"globals": "^17.13.0",
 		"typescript": "^6.0.3",
 		"xo": "^5.0.1"
 	}

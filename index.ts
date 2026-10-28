@@ -39,11 +39,7 @@ function castAllFramesTarget(target: number | Target): AllFramesTarget {
 }
 
 function castArray<A = unknown>(possibleArray: A | A[]): A[] {
-	if (Array.isArray(possibleArray)) {
-		return possibleArray;
-	}
-
-	return [possibleArray];
+	return Array.isArray(possibleArray) ? possibleArray : [possibleArray];
 }
 
 function dedupeFiles(files: string[], seen: string[]): string[] {
