@@ -2,13 +2,10 @@
 	"extends": "@sindresorhus/tsconfig",
 	"compilerOptions": {
 		"outDir": ".",
-		"types": ["chrome", "node"],
-		"allowImportingTsExtensions": true,
-		"noEmit": true
+		"types": ["chrome", "node"]
 	},
 	"files": [
 		"types.d.ts",
-		"index.test.ts",
 		"index.ts"
 	]
 }

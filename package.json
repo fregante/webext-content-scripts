@@ -16,10 +16,10 @@
 		"node": ">=24"
 	},
 	"scripts": {
-		"build": "tsc -p tsconfig.build.json",
-		"prepare": "tsc -p tsconfig.build.json --sourceMap false",
+		"build": "tsc",
+		"prepare": "tsc --sourceMap false",
 		"test": "xo && tsc && node --test",
-		"watch": "tsc -p tsconfig.build.json --watch"
+		"watch": "tsc --watch"
 	},
 	"files": [
 		"index.js",

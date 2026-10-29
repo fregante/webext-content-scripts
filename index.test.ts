@@ -5,6 +5,7 @@ import {
 	it,
 	type TestContext,
 } from 'node:test';
+// eslint-disable-next-line n/file-extension-in-import -- Node runs this file as TypeScript
 import {assertTabAccess, injectContentScript} from './index.ts';
 
 describe('assertTabAccess', () => {
